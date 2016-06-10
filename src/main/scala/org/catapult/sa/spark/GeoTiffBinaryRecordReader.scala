@@ -10,7 +10,7 @@ import org.apache.hadoop.mapreduce.{InputSplit, RecordReader, TaskAttemptContext
 import org.apache.spark.deploy.SparkHadoopUtil
 
 /**
-  * Created by Wil.Selwood on 31/05/2016.
+  * read a geotif data set.
   */
 class GeoTiffBinaryRecordReader extends RecordReader[LongWritable, BytesWritable] {
 

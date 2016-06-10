@@ -1,7 +1,6 @@
 package org.catapult.sa.spark
 
 import java.io._
-import java.nio.file.Paths
 
 import org.apache.accumulo.core.client.{BatchWriterConfig, ClientConfiguration, IteratorSetting}
 import org.apache.accumulo.core.client.mapreduce.{AccumuloInputFormat, AccumuloOutputFormat}
@@ -16,7 +15,6 @@ import org.apache.hadoop.io.{NullWritable, Text}
 import org.apache.hadoop.mapreduce.{MRJobConfig, OutputFormat}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
-import org.catapult.sa.geoprocess.GeoTiffToASC._
 import org.geotools.data.{DataStoreFinder, Query, Transaction}
 import org.geotools.feature.simple.SimpleFeatureBuilder
 import org.locationtech.geomesa.accumulo.data.{AccumuloDataStore, AccumuloDataStoreParams, ModifyAccumuloFeatureWriter}
@@ -27,7 +25,6 @@ import org.opengis.feature.simple.{SimpleFeature, SimpleFeatureType}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import scala.reflect.ClassTag
 
 /**
   * Help methods to make using spark and geo mesa easier.
@@ -311,46 +308,6 @@ trait SparkApplication extends Arguments {
     }
   }
 
-  def saveMultiLineTextFile(rdd : RDD[String], fileName : String) : Unit = {
-    rdd.map(e => NullWritable.get() -> new Text(e))
-      .saveAsNewAPIHadoopFile(fileName, classOf[NullWritable], classOf[Text], classOf[MultiLineTextOutputFormat])
-  }
-
-  def joinOutputFiles(path : String, prefix : String, outputName : String) : Unit = {
-    val dir = new File(path)
-    if (! dir.isDirectory) {
-      throw new IOException("Path is not a directory")
-    }
-
-    joinFiles(outputName, dir.listFiles().filter(f => f.getName.startsWith(prefix)):_*)
-  }
-
-  def joinFiles(outputPath : String, files : File*) : Unit = {
-    val output = new File(outputPath)
-    if (output.exists()) {
-      throw new IOException("Output path already exists")
-    }
-
-    val outputStream = new FileOutputStream(output)
-    val buffer = new Array[Byte](2048)
-    files.foreach(f => {
-      val inputStream = new BufferedInputStream(new FileInputStream(f))
-
-      var count = 0
-      do {
-        count = inputStream.read(buffer)
-        if (count >= 0) {
-          outputStream.write(buffer)
-        }
-      } while (count >= 0)
-
-      inputStream.close()
-    })
-
-    outputStream.flush()
-    outputStream.close()
-  }
-
   /**
     * Map the arguments needed for geomesa from our options.
     *
@@ -378,18 +335,6 @@ trait SparkApplication extends Arguments {
         AccumuloDataStoreParams.authsParam.key -> opts("user")
       )
     }
-  }
-
-  // Version of append that can be used to aggregate
-  def append[T](l : mutable.Buffer[T], r : T) : mutable.Buffer[T] = {
-    l.append(r)
-    l
-  }
-
-  // Version of append for second half of aggregate
-  def appendAll[T](a : mutable.Buffer[T], b : mutable.Buffer[T]) : mutable.Buffer[T] = {
-    a.appendAll(b)
-    a
   }
 
   def buildFeatureType(name : String, ts : String) : SimpleFeatureType = {

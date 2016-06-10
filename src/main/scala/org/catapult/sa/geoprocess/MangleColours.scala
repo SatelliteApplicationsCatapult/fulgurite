@@ -5,13 +5,15 @@ import java.util.Date
 
 import org.apache.spark.SparkContext
 import org.catapult.sa.geotiff.{GeoTiffMeta, RGBDataPoint}
-import org.catapult.sa.spark.{Argument, GeoSparkUtils, SparkApplication}
+import org.catapult.sa.spark.{Argument, GeoSparkUtils, SparkApplication, SparkUtils}
 
 object MangleColours extends SparkApplication {
 
   def main(args : Array[String]) : Unit = {
 
     val conf = configure(args)
+    //conf.set("spark.executor.heartbeatInterval", "1s") // timeouts when running on laptop.
+
     val sc = new SparkContext(conf)
 
     val (metaData, baseMeta) = GeoTiffMeta(opts("input"))
@@ -32,9 +34,7 @@ object MangleColours extends SparkApplication {
     GeoSparkUtils.saveGeoTiff(converted, metaData, baseMeta, opts("output"))
 
     println("Joining up output files...")
-    joinOutputFiles(opts("output"), "part-", opts("output") + "/data.tif")
-    println("Adding header...")
-    joinFiles(opts("output") + "/result.tif", new File(opts("output") + "/header.tiff"), new File(opts("output") + "/data.tif"))
+    SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", 77, opts("output"), "part-", opts("output") + "/data.tif")
 
     sc.stop()
   }

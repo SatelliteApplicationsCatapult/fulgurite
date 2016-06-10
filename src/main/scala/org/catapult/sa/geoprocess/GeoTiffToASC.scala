@@ -31,7 +31,8 @@ object GeoTiffToASC extends SparkApplication {
         }
       })
 
-    saveMultiLineTextFile(converted, opts("output"))
+    SparkUtils.saveMultiLineTextFile(converted, opts("output"))
+    SparkUtils.joinOutputFiles("", 0, opts("output"), "part", opts("output") + "output.asc")
     sc.stop()
   }
 

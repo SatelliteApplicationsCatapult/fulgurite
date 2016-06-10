@@ -9,7 +9,9 @@ import org.apache.hadoop.mapreduce.{RecordWriter, TaskAttemptContext}
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
 
 /**
-  * Created by Wil.Selwood on 02/06/2016.
+  * Text output with out the newlines.
+  *
+  * If you need newlines insert them your self.
   */
 class MultiLineTextOutputFormat extends TextOutputFormat[NullWritable, Text]{
 

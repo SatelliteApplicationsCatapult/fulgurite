@@ -4,7 +4,7 @@ import java.io._
 import javax.imageio.ImageIO
 
 import com.github.jaiimageio.impl.plugins.tiff.TIFFImageMetadata
-import org.catapult.sa.geotiff.{GeoTiffIIOMetadataAdapter, GeoTiffMeta}
+import org.catapult.sa.geotiff.GeoTiffMeta
 import org.catapult.sa.spark.{Argument, Arguments}
 import org.w3c.dom.Node
 
