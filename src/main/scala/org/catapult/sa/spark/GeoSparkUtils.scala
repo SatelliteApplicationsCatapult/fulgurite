@@ -7,7 +7,6 @@ import javax.imageio.metadata.IIOMetadata
 import com.github.jaiimageio.impl.plugins.tiff.TIFFImageMetadata
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{BytesWritable, LongWritable}
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileAsBinaryOutputFormat
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.catapult.sa.geotiff.{DataPoint, GeoTiffMeta, Index}
@@ -45,16 +44,14 @@ object GeoSparkUtils {
   }
 
   def saveGeoTiff[T <: DataPoint](rdd : RDD[(Index,  T)], meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String) : Unit = {
-    rdd.map { case (i, d) =>
-        i.y -> (i.i -> d)
-      }
-      .aggregateByKey(mutable.Buffer.empty[(Long, T)], meta.height.toInt)({ (b, d) => b.append(d); b }, {(a, b) => a.appendAll(b); a })
+    rdd.map { case (i, d) => i.y -> (i.i -> d) }
+      .aggregateByKey(mutable.Buffer.empty[(Long, T)], meta.height.toInt/3)(SparkUtils.append, SparkUtils.appendAll) // TODO: balance size of rows with number of partitions.
       .sortByKey()
       .map { case (x, b) =>
         val converter = createBytes(meta)
-        new BytesWritable(Array.emptyByteArray) -> new BytesWritable(b.sortBy(_._1).foldLeft(mutable.Buffer.empty[Byte]) { (b, v) => b.appendAll(converter(v._2)); b}.padTo(meta.width.toInt, 0x0.asInstanceOf[Byte]).toArray)
+        new BytesWritable(Array.emptyByteArray) -> new BytesWritable(b.sortBy(_._1).foldLeft(mutable.Buffer.empty[Byte]) { (b, v) => b.appendAll(converter(v._2)); b}.toArray)
       }
-      .saveAsNewAPIHadoopFile(path, classOf[BytesWritable], classOf[BytesWritable], classOf[SequenceFileAsBinaryOutputFormat])
+      .saveAsNewAPIHadoopFile(path, classOf[BytesWritable], classOf[BytesWritable], classOf[RawBinaryOutputFormat])
     saveMetaData(meta, baseMeta, path)
   }
 
@@ -77,15 +74,31 @@ object GeoSparkUtils {
 
       // Write the pointer to the first IFD after the header.
       ios.writeInt(headerNext.toInt)
+      val rootIFD = clonedMeta.asInstanceOf[TIFFImageMetadata].getRootIFD
+      rootIFD.writeToStream(ios)
 
-      clonedMeta.asInstanceOf[TIFFImageMetadata].getRootIFD.writeToStream(ios)
-
-      /*if (ios.getStreamPosition < meta.startOffset) {
-        println("writing padding in header." + (meta.startOffset - ios.getStreamPosition))
-        ios.write(Array.fill[Byte]((meta.startOffset - ios.getStreamPosition).toInt) { 0.asInstanceOf[Byte] } )
-      }*/
+      ios.writeInt(0)
 
       ios.flush()
+      val startPoint = rootIFD.getLastPosition
+
+      ios.seek(rootIFD.getStripOrTileOffsetsPosition)
+      0L.until(meta.height*3).foreach { i =>
+        val chunk = startPoint + (i * meta.width)
+        ios.writeInt(chunk.asInstanceOf[Int])
+      }
+
+      ios.seek(rootIFD.getStripOrTileByteCountsPosition)
+      0L.until(meta.height*3).foreach { i =>
+        ios.writeInt(meta.width.asInstanceOf[Int]) // TODO THIS IS BROKEN. some thing in the offset size does not work. See diff of output2.xml and output3.xml
+      }
+      ios.flush()
+      if (ios.getStreamPosition < meta.startOffset) {
+        println("writing padding in header. (" + meta.startOffset + " - " + ios.getStreamPosition + ") = " + (meta.startOffset - ios.getStreamPosition))
+        //ios.write(Array.fill[Byte]((meta.startOffset - ios.getStreamPosition).toInt) { 0.asInstanceOf[Byte] } )
+      }
+
+
       ios.close()
     }
   }
@@ -103,7 +116,7 @@ object GeoSparkUtils {
 
   private def createKeyValue(meta : GeoTiffMeta, bytesPerRecord : Int) : ((LongWritable, BytesWritable)) => (Index, DataPoint) = {
     val conv = DataPoint.buildConverter(meta)
-    val width = meta.width / bytesPerRecord
+    val width = meta.width
     (e : (LongWritable, BytesWritable)) => Index(e._1.get(), width) -> conv(e._2.getBytes)
   }
 

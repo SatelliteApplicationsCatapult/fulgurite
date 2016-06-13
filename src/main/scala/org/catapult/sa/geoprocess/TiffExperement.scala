@@ -59,7 +59,7 @@ object TiffExperement extends Arguments {
 
       println("read : " + byteCount)*/
 
-      val output = new PrintStream(new FileOutputStream("output2.xml"))
+      val output = new PrintStream(new FileOutputStream("output3.xml"))
 
       meta.getMetadataFormatNames.foreach(k => {
         displayMeta(output, meta.getAsTree(k), 0)
@@ -67,7 +67,7 @@ object TiffExperement extends Arguments {
 
       output.flush()
 
-      val ios = ImageIO.createImageOutputStream(new File("output.meta.tiff"))
+      /*val ios = ImageIO.createImageOutputStream(new File("output.meta.tiff"))
       val writers = ImageIO.getImageWritersByFormatName("tiff")
       if (writers.hasNext) {
         val writer = writers.next()
@@ -78,7 +78,7 @@ object TiffExperement extends Arguments {
 
         ios.flush()
         ios.close()
-      }
+      }*/
 
     }
 
@@ -88,7 +88,7 @@ object TiffExperement extends Arguments {
   }
 
   override def defaultArgs(): Map[String, String] = Map(
-    "in" -> "c:/data/will/16April2016_Belfast_RGB_1.tif"
+    "in" -> "c:/data/will/test_1465804081407.tif/data.tif"
   )
 
   override def allArgs(): List[Argument] = List(Argument("in"))

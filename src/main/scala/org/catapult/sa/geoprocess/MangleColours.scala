@@ -34,9 +34,11 @@ object MangleColours extends SparkApplication {
     GeoSparkUtils.saveGeoTiff(converted, metaData, baseMeta, opts("output"))
 
     println("Joining up output files...")
-    SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", 77, opts("output"), "part-", opts("output") + "/data.tif")
+    SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), "part-", opts("output") + "/data.tif")
 
     sc.stop()
+
+    //SparkUtils.deleteAllExcept(opts("output"), "data.tif")
   }
 
   override def extraArgs(): List[Argument] = List(Argument("input"), Argument("output"))
