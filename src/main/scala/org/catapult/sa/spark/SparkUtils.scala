@@ -8,7 +8,7 @@ import org.apache.spark.rdd.RDD
 import scala.collection.mutable
 
 /**
-  * Created by Wil.Selwood on 08/06/2016.
+  * Utility functions to make working with spark slightly easier.
   */
 object SparkUtils {
   // Version of append that can be used to aggregate

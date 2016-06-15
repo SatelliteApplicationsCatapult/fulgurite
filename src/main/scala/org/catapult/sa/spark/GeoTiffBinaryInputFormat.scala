@@ -8,17 +8,13 @@ import org.apache.spark.Logging
 import org.apache.spark.deploy.SparkHadoopUtil
 import org.apache.spark.input.FixedLengthBinaryRecordReader
 
-/**
-  * Created by Wil.Selwood on 31/05/2016.
-  */
 
 object GeoTiffBinaryInputFormat {
-  /** Property name to set in Hadoop JobConfs for record length */
+
   val RECORD_LENGTH_PROPERTY = "org.catapult.sa.spark.GeoTiffBinaryInputFormat.recordLength"
   val RECORD_START_OFFSET_PROPERTY = "org.catapult.sa.spark.GeoTiffBinaryInputFormat.startOffset"
   val RECORD_END_OFFSET_PROPERTY = "org.catapult.sa.spark.GeoTiffBinaryInputFormat.endOffset"
 
-  /** Retrieves the record length property from a Hadoop configuration */
   def getRecordLength(context: JobContext): Int = {
     SparkHadoopUtil.get.getConfigurationFromJobContext(context).get(RECORD_LENGTH_PROPERTY).toInt
   }

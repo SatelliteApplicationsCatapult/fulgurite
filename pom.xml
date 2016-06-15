@@ -4,10 +4,10 @@
   <artifactId>reasonable-excuse</artifactId>
   <version>1.0-SNAPSHOT</version>
   <inceptionYear>2016</inceptionYear>
+
   <properties>
-    <scala.version>2.11.2</scala.version>
-    <geomesa.version>1.2.1</geomesa.version>
-    <gt.version>14.1</gt.version>
+    <scala.version>2.11.8</scala.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
   <developers>
@@ -22,45 +22,11 @@
     </developer>
   </developers>
 
-  <distributionManagement>
-    <snapshotRepository>
-      <id>artifactory-snapshots</id>
-      <name>artifactory-snapshots</name>
-      <url>http://10.21.12.107:8081/artifactory/libs-snapshot-local</url>
-    </snapshotRepository>
-    <repository>
-      <id>artifactory-releases</id>
-      <name>artifactory-releases</name>
-      <url>http://10.21.12.107:8081/artifactory/libs-release-local</url>
-    </repository>
-  </distributionManagement>
-
   <repositories>
-    <repository>
-      <id>local-artifactory</id>
-      <name>artifactory-snapshots</name>
-      <url>http://10.21.12.107:8081/artifactory/libs-snapshot-local</url>
-    </repository>
     <repository>
       <id>scala-tools.org</id>
       <name>Scala-Tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
-    </repository>
-    <repository>
-      <id>locationtech-releases</id>
-      <url>https://repo.locationtech.org/content/repositories/releases</url>
-    </repository>
-    <repository>
-      <id>locationtech-snapshots</id>
-      <url>https://repo.locationtech.org/content/repositories/snapshots</url>
-    </repository>
-    <repository>
-      <id>geotools</id>
-      <url>http://download.osgeo.org/webdav/geotools</url>
-    </repository>
-    <repository>
-      <id>boundlessgeo</id>
-      <url>http://repo.boundlessgeo.com/main</url>
     </repository>
   </repositories>
 
@@ -78,55 +44,11 @@
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
     </dependency>
-
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_2.11</artifactId>
       <version>1.6.1</version>
     </dependency>
-    <dependency>
-      <groupId>org.apache.accumulo</groupId>
-      <artifactId>accumulo-core</artifactId>
-      <version>1.7.1</version>
-    </dependency>
-    <dependency> <!-- code used by spark but not defined as dependcy -->
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-servlet</artifactId>
-      <version>9.3.9.M1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.locationtech.geomesa</groupId>
-      <artifactId>geomesa-accumulo-datastore</artifactId>
-      <version>${geomesa.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.locationtech.geomesa</groupId>
-      <artifactId>geomesa-jobs</artifactId>
-      <version>${geomesa.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.locationtech.geomesa</groupId>
-      <artifactId>geomesa-compute</artifactId>
-      <version>${geomesa.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.locationtech.geomesa</groupId>
-      <artifactId>geomesa-utils</artifactId>
-      <version>${geomesa.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.geotools</groupId>
-      <artifactId>gt-wfs</artifactId>
-      <version>${gt.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.geotools</groupId>
-      <artifactId>gt-epsg-wkt</artifactId>
-      <version>${gt.version}</version>
-    </dependency>
-
     <dependency>
       <groupId>com.github.jai-imageio</groupId>
       <artifactId>jai-imageio-core</artifactId>
@@ -139,12 +61,6 @@
       <version>4.4</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.specs</groupId>
-      <artifactId>specs</artifactId>
-      <version>1.2.5</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>
@@ -154,6 +70,7 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
+        <version>2.15.2</version>
         <executions>
           <execution>
             <goals>
@@ -169,23 +86,6 @@
           </args>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-eclipse-plugin</artifactId>
-        <configuration>
-          <downloadSources>true</downloadSources>
-          <buildcommands>
-            <buildcommand>ch.epfl.lamp.sdt.core.scalabuilder</buildcommand>
-          </buildcommands>
-          <additionalProjectnatures>
-            <projectnature>ch.epfl.lamp.sdt.core.scalanature</projectnature>
-          </additionalProjectnatures>
-          <classpathContainers>
-            <classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER</classpathContainer>
-            <classpathContainer>ch.epfl.lamp.sdt.launching.SCALA_CONTAINER</classpathContainer>
-          </classpathContainers>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
   <reporting>
@@ -193,6 +93,7 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
+        <version>2.15.2</version>
         <configuration>
           <scalaVersion>${scala.version}</scalaVersion>
         </configuration>

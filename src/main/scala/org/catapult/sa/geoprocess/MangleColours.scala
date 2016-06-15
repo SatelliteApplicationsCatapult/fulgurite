@@ -1,10 +1,9 @@
 package org.catapult.sa.geoprocess
 
-import java.io.File
 import java.util.Date
 
 import org.apache.spark.SparkContext
-import org.catapult.sa.geotiff.{GeoTiffMeta, RGBDataPoint}
+import org.catapult.sa.geotiff.GeoTiffMeta
 import org.catapult.sa.spark.{Argument, GeoSparkUtils, SparkApplication, SparkUtils}
 
 object MangleColours extends SparkApplication {
@@ -12,7 +11,6 @@ object MangleColours extends SparkApplication {
   def main(args : Array[String]) : Unit = {
 
     val conf = configure(args)
-    //conf.set("spark.executor.heartbeatInterval", "1s") // timeouts when running on laptop.
 
     val sc = new SparkContext(conf)
 
@@ -21,15 +19,12 @@ object MangleColours extends SparkApplication {
     println(metaData)
 
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
-     /* .map { case (i, d) =>
-        val max = Math.max(Math.max(d.r, d.g), d.b)
-
-        val r = if (d.r == max) { 255 } else { 0 }
-        val g = if (d.g == max) { 255 } else { 0 }
-        val b = if (d.b == max) { 255 } else { 0 }
-
-        i -> RGBDataPoint(r, g, b)
-      }*/
+     .map { case (i, d) =>
+        i.band match {
+          case 0 => i -> 255
+          case _ => i -> d
+        }
+     }
 
     GeoSparkUtils.saveGeoTiff(converted, metaData, baseMeta, opts("output"))
 
@@ -44,7 +39,7 @@ object MangleColours extends SparkApplication {
   override def extraArgs(): List[Argument] = List(Argument("input"), Argument("output"))
 
   override def defaultExtraArgs(): Map[String, String] = Map(
-    "input" -> "c:/data/will/16April2016_Belfast_RGB_1.tif",
+    "input" -> "C:/data/S1_IW_GRDH_1SDV_20150204_T17_5710/S1_IW_GRDH_1SDV_20150204_T17_5710_ML2_ELL_CAL_GAMMA0_VH_TC_SRTM90_WGS84LL_AOI_Spk_Mean55.tif",
     "output" -> ("c:/data/will/test_" + new Date().getTime.toString + ".tif")
   )
 

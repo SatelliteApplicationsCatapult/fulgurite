@@ -3,7 +3,6 @@ package org.catapult.sa.geoprocess
 import java.io._
 import javax.imageio.ImageIO
 
-import com.github.jaiimageio.impl.plugins.tiff.TIFFImageMetadata
 import org.catapult.sa.geotiff.GeoTiffMeta
 import org.catapult.sa.spark.{Argument, Arguments}
 import org.w3c.dom.Node
@@ -11,7 +10,7 @@ import org.w3c.dom.Node
 /**
   * Experiments working with GeoTiff files
   */
-object TiffExperement extends Arguments {
+object TiffExperiment extends Arguments {
 
   def main(args : Array[String]) : Unit = {
     val opts = processArgs(args, defaultArgs())
@@ -23,8 +22,6 @@ object TiffExperement extends Arguments {
 
     val iis = ImageIO.createImageInputStream(file)
     val readers = ImageIO.getImageReaders(iis)
-
-
 
 
     if (readers.hasNext) {
@@ -59,7 +56,7 @@ object TiffExperement extends Arguments {
 
       println("read : " + byteCount)*/
 
-      val output = new PrintStream(new FileOutputStream("output3.xml"))
+      val output = new PrintStream(new FileOutputStream("output4.xml"))
 
       meta.getMetadataFormatNames.foreach(k => {
         displayMeta(output, meta.getAsTree(k), 0)
@@ -82,13 +79,10 @@ object TiffExperement extends Arguments {
 
     }
 
-
-
-
   }
 
   override def defaultArgs(): Map[String, String] = Map(
-    "in" -> "c:/data/will/test_1465804081407.tif/data.tif"
+    "in" -> "C:/data/S1_IW_GRDH_1SDV_20150204_T17_5710/S1_IW_GRDH_1SDV_20150204_T17_5710_ML2_ELL_CAL_GAMMA0_VH_TC_SRTM90_WGS84LL_AOI_Spk_Mean55.tif"
   )
 
   override def allArgs(): List[Argument] = List(Argument("in"))

@@ -742,8 +742,11 @@ class GeoTiffIIOMetadataAdapter(val imageMetadata: IIOMetadata) {
 
   def getModelPixelScales: Array[Double] = {
     val modelTiePointNode: IIOMetadataNode = getTiffField(GeoTIFFTagSet.TAG_MODEL_PIXEL_SCALE)
-    val result: Array[Double] = getTiffDoubles(modelTiePointNode)
-    result
+    if (modelTiePointNode != null) {
+      getTiffDoubles(modelTiePointNode)
+    } else {
+      Array.emptyDoubleArray
+    }
   }
 
   def getModelTiePoints: Array[Double] = {
@@ -827,11 +830,16 @@ class GeoTiffIIOMetadataAdapter(val imageMetadata: IIOMetadata) {
   }
 
   private def getTiffLong(tiffField: IIOMetadataNode, index: Int): Long = {
-    val shortsElement: IIOMetadataNode = tiffField.getFirstChild.asInstanceOf[IIOMetadataNode]
-    val longs: NodeList = shortsElement.getElementsByTagName(GeoTiffIIOMetadataAdapter.TIFF_LONG_TAG)
-    val node: Node = longs.item(index)
-    val result: Long = getLongValueAttribute(node)
-    result
+    val longsElement: IIOMetadataNode = tiffField.getFirstChild.asInstanceOf[IIOMetadataNode]
+    val longs: NodeList = longsElement.getElementsByTagName(GeoTiffIIOMetadataAdapter.TIFF_LONG_TAG)
+    if (longs != null && longs.getLength >= index + 1) {
+      val node: Node = longs.item(index)
+      getLongValueAttribute(node)
+    } else {
+      val shorts: NodeList = longsElement.getElementsByTagName(GeoTiffIIOMetadataAdapter.TIFF_SHORT_TAG)
+      val node: Node = shorts.item(index)
+      getLongValueAttribute(node)
+    }
   }
 
   private def getTiffShort(tiffField: IIOMetadataNode, index: Int): Int = {

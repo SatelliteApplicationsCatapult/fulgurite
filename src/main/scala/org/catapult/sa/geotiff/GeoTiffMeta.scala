@@ -17,7 +17,7 @@ case class GeoTiffMeta(width : Long, height : Long,
     "GeoTiffMeta(width=" + width + " height=" + height +
       " samplesPerPixel=" + samplesPerPixel + " bitsPerSample=[" + bitsPerSample.mkString(", ") +
     "] startOffset=" + startOffset + " endOffset=" + endOffset +
-      " tiePoints=[" + tiePoints.mkString(", ") + "] pixelScales=[" + pixelScales.mkString(", ") + "])"
+      " tiePoints=[" + (if (tiePoints == null || tiePoints.isEmpty) { "" } else { tiePoints.mkString(", ") }) + "] pixelScales=[" + (if (pixelScales == null || pixelScales.isEmpty) { "" } else { pixelScales.mkString(", ") }) + "])"
   }
 }
 

@@ -9,9 +9,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{BytesWritable, LongWritable}
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.catapult.sa.geotiff.{DataPoint, GeoTiffMeta, Index}
-
-import scala.collection.mutable
+import org.catapult.sa.geotiff.{GeoTiffMeta, Index}
 
 /**
   * Utility functions for working with geo tiff files.
@@ -26,8 +24,8 @@ object GeoSparkUtils {
     * @param sc spark context to use.
     * @return RDD of Index to DataPoint
     */
-  def GeoTiffRDD(path : String, meta: GeoTiffMeta, sc : SparkContext) : RDD[(Index, DataPoint)] = {
-    val bytesPerRecord = (meta.bitsPerSample.sum + 7) / 8 // int division make sure it always rounds up hence +7
+  def GeoTiffRDD(path : String, meta: GeoTiffMeta, sc : SparkContext) : RDD[(Index, Int)] = {
+    val bytesPerRecord = (meta.bitsPerSample.max + 7) / 8 // TODO: this won't work if any of the bands have different pixel widths.
 
     val inputConf = new Configuration()
     inputConf.setInt(GeoTiffBinaryInputFormat.RECORD_LENGTH_PROPERTY, bytesPerRecord)
@@ -40,18 +38,15 @@ object GeoSparkUtils {
       classOf[LongWritable],
       classOf[BytesWritable],
       inputConf
-    ).map(createKeyValue(meta, bytesPerRecord))
+    ).map(createKeyValue(meta))
   }
 
-  def saveGeoTiff[T <: DataPoint](rdd : RDD[(Index,  T)], meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String) : Unit = {
-    rdd.map { case (i, d) => i.y -> (i.i -> d) }
-      .aggregateByKey(mutable.Buffer.empty[(Long, T)], meta.height.toInt/3)(SparkUtils.append, SparkUtils.appendAll) // TODO: balance size of rows with number of partitions.
-      .sortByKey()
-      .map { case (x, b) =>
-        val converter = createBytes(meta)
-        new BytesWritable(Array.emptyByteArray) -> new BytesWritable(b.sortBy(_._1).foldLeft(mutable.Buffer.empty[Byte]) { (b, v) => b.appendAll(converter(v._2)); b}.toArray)
-      }
+  def saveGeoTiff(rdd : RDD[(Index,  Int)], meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String) : Unit = {
+    rdd.map { case (i, d) => i.i -> createBytes(meta)(i.band, d) }
+      .sortByKey() // TODO: optimise based on the size of the image.
+      .map { case (i, b) => new BytesWritable(Array.emptyByteArray) -> new BytesWritable(b) }
       .saveAsNewAPIHadoopFile(path, classOf[BytesWritable], classOf[BytesWritable], classOf[RawBinaryOutputFormat])
+
     saveMetaData(meta, baseMeta, path)
   }
 
@@ -90,7 +85,7 @@ object GeoSparkUtils {
 
       ios.seek(rootIFD.getStripOrTileByteCountsPosition)
       0L.until(meta.height*3).foreach { i =>
-        ios.writeInt(meta.width.asInstanceOf[Int]) // TODO THIS IS BROKEN. some thing in the offset size does not work. See diff of output2.xml and output3.xml
+        ios.writeInt(meta.width.asInstanceOf[Int])
       }
       ios.flush()
       if (ios.getStreamPosition < meta.startOffset) {
@@ -98,26 +93,37 @@ object GeoSparkUtils {
         //ios.write(Array.fill[Byte]((meta.startOffset - ios.getStreamPosition).toInt) { 0.asInstanceOf[Byte] } )
       }
 
-
       ios.close()
     }
   }
 
-  private def createBytes[T <: DataPoint](meta : GeoTiffMeta) : (T) => Array[Byte] = {
-    meta.samplesPerPixel match {
-      case 3 => if (meta.bitsPerSample(0) == 8 && meta.bitsPerSample(1) == 8  && meta.bitsPerSample(2) == 8) {
-        (e : T) => Array(e.r.asInstanceOf[Byte], e.g.asInstanceOf[Byte], e.b.asInstanceOf[Byte])
-      } else {
-        throw new UnsupportedOperationException("can not yet handle more than one byte colours. Find this error and implement")
+  private def createKeyValue(meta : GeoTiffMeta) : ((LongWritable, BytesWritable)) => (Index, Int) = {
+    val width = meta.width
+    val bandLength = meta.height * meta.width
+    val bands = meta.samplesPerPixel
+    val pixelWidths = meta.bitsPerSample
+
+    (e : (LongWritable, BytesWritable)) => {
+      val i = Index.create(e._1.get(), width, bandLength, bands)
+      val b = e._2.getBytes
+      pixelWidths(i.band) match {
+        case 8 => i -> (0xFF & b(0))
+        case 16 => i -> (((b(1) & 0xFF) << 8) | (b(0) & 0xFF))
+        case 32 => i -> (((b(3) & 0xFF) << 24) | ((b(2) & 0xFF) << 16) | ((b(1) & 0xFF) << 8) | (b(0) & 0xFF))
+        case _ => throw new UnsupportedOperationException("can not yet handle this many bit colours. Find this error and implement")
       }
-      case _ => throw new UnsupportedOperationException("can not yet handle more than three colours. Find this error and implement")
+
     }
   }
 
-  private def createKeyValue(meta : GeoTiffMeta, bytesPerRecord : Int) : ((LongWritable, BytesWritable)) => (Index, DataPoint) = {
-    val conv = DataPoint.buildConverter(meta)
-    val width = meta.width
-    (e : (LongWritable, BytesWritable)) => Index(e._1.get(), width) -> conv(e._2.getBytes)
+  private def createBytes(meta : GeoTiffMeta) : (Int, Int) => Array[Byte] = {
+    val bytesPerPixel = meta.bitsPerSample
+    (band, d) => bytesPerPixel(band) match {
+      case 8 => Array(d.asInstanceOf[Byte])
+      case 16 => Array((d & 0xFF00 >> 8 ).asInstanceOf[Byte], d.asInstanceOf[Byte])
+      case 32 => Array((d & 0xFF000000 >> 24 ).asInstanceOf[Byte], (d & 0xFF0000 >> 16 ).asInstanceOf[Byte], (d & 0xFF00 >> 8 ).asInstanceOf[Byte], d.asInstanceOf[Byte])
+      case _ => throw new UnsupportedOperationException("can not yet handle this many bit colours. Find this error and implement")
+    }
   }
 
 }
