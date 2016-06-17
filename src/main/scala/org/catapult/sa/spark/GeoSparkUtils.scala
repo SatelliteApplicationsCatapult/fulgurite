@@ -25,6 +25,7 @@ object GeoSparkUtils {
     * @return RDD of Index to DataPoint
     */
   def GeoTiffRDD(path : String, meta: GeoTiffMeta, sc : SparkContext) : RDD[(Index, Int)] = {
+    // rounded to nearest byte
     val bytesPerRecord = (meta.bitsPerSample.max + 7) / 8 // TODO: this won't work if any of the bands have different pixel widths.
 
     val inputConf = new Configuration()
@@ -69,6 +70,8 @@ object GeoSparkUtils {
 
       // Write the pointer to the first IFD after the header.
       ios.writeInt(headerNext.toInt)
+
+      // Write the IFD
       val rootIFD = clonedMeta.asInstanceOf[TIFFImageMetadata].getRootIFD
       rootIFD.writeToStream(ios)
 
@@ -77,20 +80,24 @@ object GeoSparkUtils {
       ios.flush()
       val startPoint = rootIFD.getLastPosition
 
+
+      // Now go back and update the IFD with the position offsets of the strips
       ios.seek(rootIFD.getStripOrTileOffsetsPosition)
-      0L.until(meta.height*3).foreach { i =>
-        val chunk = startPoint + (i * meta.width)
-        ios.writeInt(chunk.asInstanceOf[Int])
+      0.until(meta.samplesPerPixel).foreach { s =>
+        val rowWidth = meta.width * ((meta.bitsPerSample(s) + 7) / 8)
+        0L.until(meta.height).foreach { i =>
+          val chunk = startPoint + (i * rowWidth)
+          ios.writeInt(chunk.asInstanceOf[Int])
+        }
       }
 
+      // Finally update the row byte lengths
       ios.seek(rootIFD.getStripOrTileByteCountsPosition)
-      0L.until(meta.height*3).foreach { i =>
-        ios.writeInt(meta.width.asInstanceOf[Int])
-      }
-      ios.flush()
-      if (ios.getStreamPosition < meta.startOffset) {
-        println("writing padding in header. (" + meta.startOffset + " - " + ios.getStreamPosition + ") = " + (meta.startOffset - ios.getStreamPosition))
-        //ios.write(Array.fill[Byte]((meta.startOffset - ios.getStreamPosition).toInt) { 0.asInstanceOf[Byte] } )
+      0.until(meta.samplesPerPixel).foreach {s =>
+        val rowWidth = meta.width * ((meta.bitsPerSample(s) + 7) / 8)
+        0L.until(meta.height).foreach { i =>
+          ios.writeInt(rowWidth.asInstanceOf[Int])
+        }
       }
 
       ios.close()

@@ -4,14 +4,14 @@ import java.util.Date
 
 import org.apache.spark.SparkContext
 import org.catapult.sa.geotiff.GeoTiffMeta
-import org.catapult.sa.spark.{Argument, GeoSparkUtils, SparkApplication, SparkUtils}
+import org.catapult.sa.spark._
 
-object MangleColours extends SparkApplication {
+object MangleColours extends Arguments {
 
   def main(args : Array[String]) : Unit = {
 
-    val conf = configure(args)
-
+    val opts = processArgs(args, defaultArgs())
+    val conf = SparkUtils.createConfig("Example-Clone", "local[2]")
     val sc = new SparkContext(conf)
 
     val (metaData, baseMeta) = GeoTiffMeta(opts("input"))
@@ -19,12 +19,12 @@ object MangleColours extends SparkApplication {
     println(metaData)
 
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
-     .map { case (i, d) =>
+     /*.map { case (i, d) =>
         i.band match {
           case 0 => i -> 255
           case _ => i -> d
         }
-     }
+     }*/
 
     GeoSparkUtils.saveGeoTiff(converted, metaData, baseMeta, opts("output"))
 
@@ -36,10 +36,10 @@ object MangleColours extends SparkApplication {
     //SparkUtils.deleteAllExcept(opts("output"), "data.tif")
   }
 
-  override def extraArgs(): List[Argument] = List(Argument("input"), Argument("output"))
+  override def allArgs(): List[Argument] = List(Argument("input"), Argument("output"))
 
-  override def defaultExtraArgs(): Map[String, String] = Map(
-    "input" -> "C:/data/S1_IW_GRDH_1SDV_20150204_T17_5710/S1_IW_GRDH_1SDV_20150204_T17_5710_ML2_ELL_CAL_GAMMA0_VH_TC_SRTM90_WGS84LL_AOI_Spk_Mean55.tif",
+  override def defaultArgs(): Map[String, String] = Map(
+    "input" -> "C:/Users/Wil.Selwood/Downloads/S1A_IW_SLC__1SDV_20160610T175738_20160610T175806_011652_011D4B_9469.SAFE/measurement/s1a-iw1-slc-vh-20160610t175739-20160610t175804-011652-011d4b-001.tiff",
     "output" -> ("c:/data/will/test_" + new Date().getTime.toString + ".tif")
   )
 

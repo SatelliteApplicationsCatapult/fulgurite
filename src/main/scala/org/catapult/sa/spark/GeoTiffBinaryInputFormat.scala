@@ -28,7 +28,7 @@ object GeoTiffBinaryInputFormat {
   }
 }
 
-class GeoTiffBinaryInputFormat extends FileInputFormat[LongWritable, BytesWritable]with Logging {
+class GeoTiffBinaryInputFormat extends FileInputFormat[LongWritable, BytesWritable] with Logging {
 
   private var recordLength = -1
 

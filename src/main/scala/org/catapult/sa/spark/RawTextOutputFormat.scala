@@ -13,7 +13,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
   *
   * If you need newlines insert them your self.
   */
-class MultiLineTextOutputFormat extends TextOutputFormat[NullWritable, Text]{
+class RawTextOutputFormat extends TextOutputFormat[NullWritable, Text]{
 
   protected object LineRecordWriter {
     private val utf8: String = "UTF-8"
@@ -45,7 +45,7 @@ class MultiLineTextOutputFormat extends TextOutputFormat[NullWritable, Text]{
 
     @throws[IOException]
     def close(context: TaskAttemptContext) {
-      out.close
+      out.close()
     }
   }
 

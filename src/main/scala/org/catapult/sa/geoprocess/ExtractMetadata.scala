@@ -1,16 +1,20 @@
 package org.catapult.sa.geoprocess
 
-import java.io._
+import java.io.{File, IOException, PrintStream}
 import javax.imageio.ImageIO
 
-import org.catapult.sa.geotiff.GeoTiffMeta
 import org.catapult.sa.spark.{Argument, Arguments}
 import org.w3c.dom.Node
 
 /**
-  * Experiments working with GeoTiff files
+  * Extract the meta data from a GeoTiff and output it as an XML file
   */
-object TiffExperiment extends Arguments {
+object ExtractMetadata extends Arguments {
+  override def defaultArgs(): Map[String, String] = Map(
+    "in" -> "C:/Users/Wil.Selwood/Downloads/S1A_IW_SLC__1SDV_20160610T175738_20160610T175806_011652_011D4B_9469.SAFE/measurement/s1a-iw1-slc-vh-20160610t175739-20160610t175804-011652-011d4b-001.tiff"
+  )
+
+  override def allArgs(): List[Argument] = List(Argument("in"))
 
   def main(args : Array[String]) : Unit = {
     val opts = processArgs(args, defaultArgs())
@@ -26,66 +30,24 @@ object TiffExperiment extends Arguments {
 
     if (readers.hasNext) {
       val reader = readers.next()
-
       reader.setInput(iis, true, false)
 
       val meta = reader.getImageMetadata(0)
 
-      val geoMeta = GeoTiffMeta(meta)
-      println(geoMeta)
-
-      /*var byteCount : Long = 0
-      var done : Boolean = false
-      val buffer : Array[Byte] = new Array[Byte](1024)
-      val bytesToRead = geoMeta.endOffset - geoMeta.startOffset
-
-      val fis = new FileInputStream(file)
-      fis.skip(geoMeta.startOffset)
-
-      while (!done) {
-        val read = fis.read(buffer)
-        if (read == -1) {
-          done = true
-        } else {
-          byteCount = byteCount + read
-          if (byteCount >= bytesToRead) {
-            done = true
-          }
-        }
-      }
-
-      println("read : " + byteCount)*/
-
-      val output = new PrintStream(new FileOutputStream("output5.xml"))
+      //val output = new PrintStream(new FileOutputStream(opts("out")))
 
       meta.getMetadataFormatNames.foreach(k => {
-        displayMeta(output, meta.getAsTree(k), 0)
+        //displayMeta(output, meta.getAsTree(k), 0)
+        displayMeta(System.out, meta.getAsTree(k), 0)
       })
 
-      output.flush()
+      //output.flush()
+      //output.close()
 
-      /*val ios = ImageIO.createImageOutputStream(new File("output.meta.tiff"))
-      val writers = ImageIO.getImageWritersByFormatName("tiff")
-      if (writers.hasNext) {
-        val writer = writers.next()
-        writer.setOutput(ios)
-        writer.prepareWriteSequence(meta)
-
-        meta.asInstanceOf[TIFFImageMetadata].getRootIFD.writeToStream(ios)
-
-        ios.flush()
-        ios.close()
-      }*/
-
+      reader.dispose()
     }
 
   }
-
-  override def defaultArgs(): Map[String, String] = Map(
-    "in" -> "C:/data/Will/test_1466091017199.tif/data.tif"
-  )
-
-  override def allArgs(): List[Argument] = List(Argument("in"))
 
 
   private def displayMeta(ps : PrintStream, node : Node, level : Int) : Unit = {

@@ -44,6 +44,9 @@ import javax.imageio.metadata.IIOMetadataNode
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 
+/**
+  * Modified and converted to scala Wil Selwood 2016
+  */
 object GeoTiffIIOMetadataAdapter {
   // The following values are taken from the GeoTIFF specification
 

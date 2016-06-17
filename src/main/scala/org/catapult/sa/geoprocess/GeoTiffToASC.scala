@@ -1,55 +1,74 @@
 package org.catapult.sa.geoprocess
 
+import java.io.{FileOutputStream, PrintStream}
 import java.util.Date
 
 import org.apache.spark.SparkContext
 import org.catapult.sa.geotiff.GeoTiffMeta
 import org.catapult.sa.spark._
 
-import scala.collection.mutable
-
 /**
-  * Read a tiff and process it.
+  * Read a tiff and turn it into an ASC file
   */
-object GeoTiffToASC extends SparkApplication {
+object GeoTiffToASC extends Arguments {
 
   def main(args : Array[String]) : Unit = {
 
-    case class Point(y : Long, x : Long) extends Ordered[Point] {
-      import scala.math.Ordered.orderingToOrdered
-      def compare(that: Point): Int = (this.y, this.x) compare (that.y, that.x)
-    }
+    val opts = processArgs(args, defaultArgs())
 
-    val conf = configure(args)
+    val conf = SparkUtils.createConfig("Example-Convert", "local[2]")
+
     val sc = new SparkContext(conf)
 
     val (metaData, _) = GeoTiffMeta(opts("input"))
 
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
-        .map { case (i, d) => Point(i.y, i.x) -> (i.band -> d)}
-        .aggregateByKey(mutable.Buffer.empty[(Int, Int)], 1000)(SparkUtils.append, SparkUtils.appendAll)
-        .sortBy(_._1)
+        .filter { case (i, d) => i.band == 0 } // just take the first band.
+        .sortBy(_._1.i)
         .map { case(p, d) =>
-          val b = d.sortBy(_._1).toList
-          val result = b.head.toString + " " + b.apply(1).toString + " " + b.apply(2).toString
           if (p.x == 0 && p.y == 0) {
-            result
+            d.toString
           } else if (p.x == 0) {
-            "\n" + result
+            "\n" + d.toString
           } else {
-            " " + result
+            " " + d.toString
           }
         }
 
-    SparkUtils.saveMultiLineTextFile(converted, opts("output"))
-    SparkUtils.joinOutputFiles("", opts("output"), "part", opts("output") + "output.asc")
+    SparkUtils.saveRawTextFile(converted, opts("output"))
+    generateHeader(metaData, opts("output") + "/header.txt")
+    SparkUtils.joinOutputFiles(opts("output") + "/header.txt", opts("output"), "part", opts("output") + "/output.asc")
     sc.stop()
   }
 
-  override def extraArgs(): List[Argument] = List(Argument("input"), Argument("output"))
+  override def allArgs(): List[Argument] = List(Argument("input"), Argument("output"))
 
-  override def defaultExtraArgs(): Map[String, String] = Map(
+  override def defaultArgs(): Map[String, String] = Map(
     "input" -> "c:/data/will/16April2016_Belfast_RGB_1.tif",
     "output" -> ("c:/data/will/test_" + new Date().getTime.toString + ".asc")
   )
+
+  private def generateHeader(meta : GeoTiffMeta, target : String): Unit = {
+    val output = new PrintStream(new FileOutputStream(target))
+
+    output.print("ncols        ")
+    output.println(meta.width)
+    output.print("nrows        ")
+    output.println(meta.height)
+
+    if (meta.tiePoints != null && meta.tiePoints.length > 2) {
+      val points = meta.tiePoints.filter(_ > 0.0)
+
+      output.print("xllcorner    ")
+      output.println(points.head)
+
+      output.print("yllcorner    ")
+      output.println(points.last)
+    }
+
+    output.print("cellsize     ")
+    output.println(meta.pixelScales.head) // TODO: don't assume square pixels
+
+    output.close()
+  }
 }
