@@ -16,4 +16,11 @@ object Index {
     val bandIndex = i / numBands
     Index(Math.floorMod(bandIndex, width), Math.floorDiv(bandIndex, width), i, band.asInstanceOf[Int])
   }
+
+  implicit def orderingByBandOutput[A <: Index] : Ordering[Index] = Ordering.by(i => (i.band, i.y, i.x))
+
+  def orderingByPositionThenBand[A <: Index] : Ordering[Index] = Ordering.by(i => (i.y, i.x, i.band))
+
+  // TODO: proximity curve ordering.
+
 }

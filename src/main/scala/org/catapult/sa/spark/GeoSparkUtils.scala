@@ -25,8 +25,8 @@ object GeoSparkUtils {
     * @return RDD of Index to DataPoint
     */
   def GeoTiffRDD(path : String, meta: GeoTiffMeta, sc : SparkContext) : RDD[(Index, Int)] = {
-    // rounded to nearest byte
-    val bytesPerRecord = (meta.bitsPerSample.max + 7) / 8 // TODO: this won't work if any of the bands have different pixel widths.
+    // rounded up to whole bytes
+    val bytesPerRecord = meta.bytesPerSample.max  // TODO: this won't work if any of the bands have different pixel widths.
 
     val inputConf = new Configuration()
     inputConf.setInt(GeoTiffBinaryInputFormat.RECORD_LENGTH_PROPERTY, bytesPerRecord)
@@ -43,15 +43,16 @@ object GeoSparkUtils {
   }
 
   def saveGeoTiff(rdd : RDD[(Index,  Int)], meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String) : Unit = {
-    rdd.map { case (i, d) => i.i -> createBytes(meta)(i.band, d) }
-      .sortByKey() // TODO: optimise based on the size of the image.
+    val convertToBytes = createBytes(meta)
+    rdd.map { case (i, d) => i -> convertToBytes(i.band, d) }
+      .sortByKey(ascending = true, 100) // TODO: optimise based on the size of the image.
       .map { case (i, b) => new BytesWritable(Array.emptyByteArray) -> new BytesWritable(b) }
       .saveAsNewAPIHadoopFile(path, classOf[BytesWritable], classOf[BytesWritable], classOf[RawBinaryOutputFormat])
 
-    saveMetaData(meta, baseMeta, path)
+    saveGeoTiffMetaData(meta, baseMeta, path)
   }
 
-  def saveMetaData(meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String) : Unit = {
+  def saveGeoTiffMetaData(meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String) : Unit = {
     val clonedMeta = baseMeta
 
     val ios = ImageIO.createImageOutputStream(new File(path, "header.tiff"))
@@ -80,11 +81,10 @@ object GeoSparkUtils {
       ios.flush()
       val startPoint = rootIFD.getLastPosition
 
-
       // Now go back and update the IFD with the position offsets of the strips
       ios.seek(rootIFD.getStripOrTileOffsetsPosition)
       0.until(meta.samplesPerPixel).foreach { s =>
-        val rowWidth = meta.width * ((meta.bitsPerSample(s) + 7) / 8)
+        val rowWidth = meta.width * meta.bytesPerSample(s)
         0L.until(meta.height).foreach { i =>
           val chunk = startPoint + (i * rowWidth)
           ios.writeInt(chunk.asInstanceOf[Int])
@@ -94,7 +94,7 @@ object GeoSparkUtils {
       // Finally update the row byte lengths
       ios.seek(rootIFD.getStripOrTileByteCountsPosition)
       0.until(meta.samplesPerPixel).foreach {s =>
-        val rowWidth = meta.width * ((meta.bitsPerSample(s) + 7) / 8)
+        val rowWidth = meta.width * meta.bytesPerSample(s)
         0L.until(meta.height).foreach { i =>
           ios.writeInt(rowWidth.asInstanceOf[Int])
         }

@@ -22,13 +22,15 @@ object GeoTiffToASC extends Arguments {
 
     val (metaData, _) = GeoTiffMeta(opts("input"))
 
+    val targetBand = opts("band").toInt
+
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
-        .filter { case (i, d) => i.band == 0 } // just take the first band.
-        .sortBy(_._1.i)
-        .map { case(p, d) =>
-          if (p.x == 0 && p.y == 0) {
+        .filter { case (i, d) => i.band == targetBand } // just take the first band.
+        .sortByKey() // we only have one band so the implicit ordering of indexes is fine.
+        .map { case(i, d) =>
+          if (i.x == 0 && i.y == 0) {
             d.toString
-          } else if (p.x == 0) {
+          } else if (i.x == 0) {
             "\n" + d.toString
           } else {
             " " + d.toString
@@ -39,13 +41,15 @@ object GeoTiffToASC extends Arguments {
     generateHeader(metaData, opts("output") + "/header.txt")
     SparkUtils.joinOutputFiles(opts("output") + "/header.txt", opts("output"), "part", opts("output") + "/output.asc")
     sc.stop()
+    // TODO: use SparkUtils.deleteAllExcept to clean up.
   }
 
-  override def allArgs(): List[Argument] = List(Argument("input"), Argument("output"))
+  override def allArgs(): List[Argument] = List(Argument("input"), Argument("output"), Argument("band"))
 
   override def defaultArgs(): Map[String, String] = Map(
     "input" -> "c:/data/will/16April2016_Belfast_RGB_1.tif",
-    "output" -> ("c:/data/will/test_" + new Date().getTime.toString + ".asc")
+    "output" -> ("c:/data/will/test_" + new Date().getTime.toString + ".asc"),
+    "band" -> "0"
   )
 
   private def generateHeader(meta : GeoTiffMeta, target : String): Unit = {

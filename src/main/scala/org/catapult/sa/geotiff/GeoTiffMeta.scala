@@ -13,6 +13,9 @@ case class GeoTiffMeta(width : Long, height : Long,
                        samplesPerPixel : Int, bitsPerSample: Array[Int],
                        startOffset : Long, endOffset : Long,
                        tiePoints : Array[Double], pixelScales : Array[Double]) {
+
+  lazy val bytesPerSample = bitsPerSample.map(b => (b + 7) / 8)
+
   override def toString : String = {
     "GeoTiffMeta(width=" + width + " height=" + height +
       " samplesPerPixel=" + samplesPerPixel + " bitsPerSample=[" + bitsPerSample.mkString(", ") +

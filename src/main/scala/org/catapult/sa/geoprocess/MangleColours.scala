@@ -39,7 +39,8 @@ object MangleColours extends Arguments {
   override def allArgs(): List[Argument] = List(Argument("input"), Argument("output"))
 
   override def defaultArgs(): Map[String, String] = Map(
-    "input" -> "C:/Users/Wil.Selwood/Downloads/S1A_IW_SLC__1SDV_20160610T175738_20160610T175806_011652_011D4B_9469.SAFE/measurement/s1a-iw1-slc-vh-20160610t175739-20160610t175804-011652-011d4b-001.tiff",
+    "input" -> "C:/data/Will/16April2016_Belfast_RGB_1.tif",
+    //"input" -> "C:/Users/Wil.Selwood/Downloads/S1A_IW_SLC__1SDV_20160610T175738_20160610T175806_011652_011D4B_9469.SAFE/measurement/s1a-iw1-slc-vh-20160610t175739-20160610t175804-011652-011d4b-001.tiff",
     "output" -> ("c:/data/will/test_" + new Date().getTime.toString + ".tif")
   )
 
