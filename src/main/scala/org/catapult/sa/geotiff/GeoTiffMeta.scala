@@ -29,7 +29,7 @@ object GeoTiffMeta {
   def apply(meta: IIOMetadata) : GeoTiffMeta = {
     val geoMeta = new GeoTiffIIOMetadataAdapter(meta)
 
-    GeoTiffMeta(geoMeta.getWidth,geoMeta.getHeight,
+    GeoTiffMeta(geoMeta.getWidth, geoMeta.getHeight,
       geoMeta.getSamplesPerPixel, geoMeta.getBitsPerSample,
       geoMeta.getFirstStripOffset, geoMeta.getEndOffset,
       geoMeta.getModelTiePoints, geoMeta.getModelPixelScales)

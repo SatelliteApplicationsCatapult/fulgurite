@@ -16,18 +16,17 @@ trait Arguments {
       a match {
         case List() => result
         case head :: tail =>
-          val arg = allowed.get(head.stripPrefix("-").stripPrefix("-"))
-          if (arg.isDefined) {
-            if (arg.get.flag) {
-              loop(tail, result + (arg.get.name -> "true"))
-            } else {
-              tail match {
-                case List() => throw new IllegalArgumentException("Missing parameter: " + head)
-                case value :: t => loop(t, result + (arg.get.name -> value))
+          allowed.get(head.stripPrefix("-").stripPrefix("-")) match {
+            case Some(arg) =>
+              if (arg.flag) {
+                loop(tail, result + (arg.name -> "true"))
+              } else {
+                tail match {
+                  case List() => throw new IllegalArgumentException("Missing parameter: " + head)
+                  case value :: t => loop(t, result + (arg.name -> value))
+                }
               }
-            }
-          } else {
-            throw new IllegalArgumentException("unknown argument: " + head)
+            case None => throw new IllegalArgumentException("unknown argument: " + head)
           }
       }
     }
@@ -38,3 +37,7 @@ trait Arguments {
 }
 
 case class Argument(name : String, flag : Boolean = false)
+
+object Argument {
+  implicit def stringWrapper(s : String) : Argument = Argument(s)
+}

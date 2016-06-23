@@ -4,7 +4,7 @@ import java.io.{FileOutputStream, PrintStream}
 import java.util.Date
 
 import org.apache.spark.SparkContext
-import org.catapult.sa.geotiff.GeoTiffMeta
+import org.catapult.sa.geotiff.{GeoTiffMeta, Index}
 import org.catapult.sa.spark._
 
 /**
@@ -15,18 +15,21 @@ object GeoTiffToASC extends Arguments {
   def main(args : Array[String]) : Unit = {
 
     val opts = processArgs(args, defaultArgs())
-
     val conf = SparkUtils.createConfig("Example-Convert", "local[2]")
-
     val sc = new SparkContext(conf)
 
     val (metaData, _) = GeoTiffMeta(opts("input"))
-
     val targetBand = opts("band").toInt
+    if (metaData.samplesPerPixel < targetBand) {
+      throw new IllegalArgumentException("band must be less than the number of bands in the image.")
+    }
+
+    // pick the ordering we want for the output.
+    implicit val indexOrder = Index.orderingByBandOutput
 
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
-        .filter { case (i, d) => i.band == targetBand } // just take the first band.
-        .sortByKey() // we only have one band so the implicit ordering of indexes is fine.
+        .filter { case (i, d) => i.band == targetBand }
+        .sortByKey()
         .map { case(i, d) =>
           if (i.x == 0 && i.y == 0) {
             d.toString
@@ -44,7 +47,7 @@ object GeoTiffToASC extends Arguments {
     // TODO: use SparkUtils.deleteAllExcept to clean up.
   }
 
-  override def allArgs(): List[Argument] = List(Argument("input"), Argument("output"), Argument("band"))
+  override def allArgs(): List[Argument] = List("input", "output", "band")
 
   override def defaultArgs(): Map[String, String] = Map(
     "input" -> "c:/data/will/16April2016_Belfast_RGB_1.tif",

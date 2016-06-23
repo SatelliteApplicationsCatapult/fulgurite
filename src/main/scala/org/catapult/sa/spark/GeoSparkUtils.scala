@@ -5,6 +5,7 @@ import javax.imageio.ImageIO
 import javax.imageio.metadata.IIOMetadata
 
 import com.github.jaiimageio.impl.plugins.tiff.TIFFImageMetadata
+import com.github.jaiimageio.plugins.tiff.{BaselineTIFFTagSet, TIFFField, TIFFTag}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{BytesWritable, LongWritable}
 import org.apache.spark.SparkContext
@@ -43,6 +44,8 @@ object GeoSparkUtils {
   }
 
   def saveGeoTiff(rdd : RDD[(Index,  Int)], meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String) : Unit = {
+    implicit val indexOrdering = Index.orderingByBandOutput
+
     val convertToBytes = createBytes(meta)
     rdd.map { case (i, d) => i -> convertToBytes(i.band, d) }
       .sortByKey(ascending = true, 100) // TODO: optimise based on the size of the image.
@@ -72,8 +75,23 @@ object GeoSparkUtils {
       // Write the pointer to the first IFD after the header.
       ios.writeInt(headerNext.toInt)
 
-      // Write the IFD
       val rootIFD = clonedMeta.asInstanceOf[TIFFImageMetadata].getRootIFD
+
+      // update the ifd and make sure it matches the meta object.
+      val base = BaselineTIFFTagSet.getInstance
+      val numRows = (meta.height * meta.samplesPerPixel).asInstanceOf[Int]
+      //val numColumns = meta.width * meta.bytesPerSample.sum
+      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_IMAGE_WIDTH), meta.width.toInt))
+      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_IMAGE_LENGTH), meta.height.toInt))
+
+      // given we have just updated the size we should also update the number of offset and byte count places to be filled in later
+      //rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_OFFSETS)
+      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_STRIP_OFFSETS), TIFFTag.TIFF_LONG, numRows))
+
+      //rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS)
+      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS), TIFFTag.TIFF_LONG, numRows))
+
+      // Write the IFD
       rootIFD.writeToStream(ios)
 
       ios.writeInt(0)

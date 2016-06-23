@@ -85,7 +85,7 @@ object TiffExperiment extends Arguments {
     "in" -> "C:/data/Will/test_1466091017199.tif/data.tif"
   )
 
-  override def allArgs(): List[Argument] = List(Argument("in"))
+  override def allArgs(): List[Argument] = List("in")
 
 
   private def displayMeta(ps : PrintStream, node : Node, level : Int) : Unit = {

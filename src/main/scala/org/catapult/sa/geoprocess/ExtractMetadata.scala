@@ -11,10 +11,10 @@ import org.w3c.dom.Node
   */
 object ExtractMetadata extends Arguments {
   override def defaultArgs(): Map[String, String] = Map(
-    "in" -> "C:/Users/Wil.Selwood/Downloads/S1A_IW_SLC__1SDV_20160610T175738_20160610T175806_011652_011D4B_9469.SAFE/measurement/s1a-iw1-slc-vh-20160610t175739-20160610t175804-011652-011d4b-001.tiff"
+    "in" -> "C:/data/Will/OUREA_SiteB_24102915_WV_processedImg_mk2.tif"
   )
 
-  override def allArgs(): List[Argument] = List(Argument("in"))
+  override def allArgs(): List[Argument] = List("in")
 
   def main(args : Array[String]) : Unit = {
     val opts = processArgs(args, defaultArgs())

@@ -778,6 +778,7 @@ class GeoTiffIIOMetadataAdapter(val imageMetadata: IIOMetadata) {
     getValueAttribute(node).toInt
   }
 
+  // Tiff "Long" is 32 bits so is actually an Int
   private def getLongValueAttribute(node: Node): Long = {
     getValueAttribute(node).toLong
   }
@@ -819,6 +820,7 @@ class GeoTiffIIOMetadataAdapter(val imageMetadata: IIOMetadata) {
     result
   }
 
+  // Tiff "Long" is 32 bits so is actually an Int
   private def getTiffLongs(tiffField: IIOMetadataNode): Array[Long] = {
     val shortsElement: IIOMetadataNode = tiffField.getFirstChild.asInstanceOf[IIOMetadataNode]
     val longs: NodeList = shortsElement.getElementsByTagName(GeoTiffIIOMetadataAdapter.TIFF_LONG_TAG)
@@ -832,6 +834,7 @@ class GeoTiffIIOMetadataAdapter(val imageMetadata: IIOMetadata) {
     result
   }
 
+  // Tiff "Long" is 32 bits so is actually an Int
   private def getTiffLong(tiffField: IIOMetadataNode, index: Int): Long = {
     val longsElement: IIOMetadataNode = tiffField.getFirstChild.asInstanceOf[IIOMetadataNode]
     val longs: NodeList = longsElement.getElementsByTagName(GeoTiffIIOMetadataAdapter.TIFF_LONG_TAG)
