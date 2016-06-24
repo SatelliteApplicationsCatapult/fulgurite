@@ -4,6 +4,7 @@
   <artifactId>reasonable-excuse</artifactId>
   <version>1.0-SNAPSHOT</version>
   <inceptionYear>2016</inceptionYear>
+  <licenses>LGPL 3</licenses>
 
   <properties>
     <scala.version>2.11.8</scala.version>

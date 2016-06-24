@@ -48,7 +48,7 @@ object GeoSparkUtils {
 
     val convertToBytes = createBytes(meta)
     rdd.map { case (i, d) => i -> convertToBytes(i.band, d) }
-      .sortByKey(ascending = true, 100) // TODO: optimise based on the size of the image.
+      .sortByKey(ascending = true, 512) // TODO: optimise based on the size of the image.
       .map { case (i, b) => new BytesWritable(Array.emptyByteArray) -> new BytesWritable(b) }
       .saveAsNewAPIHadoopFile(path, classOf[BytesWritable], classOf[BytesWritable], classOf[RawBinaryOutputFormat])
 

@@ -11,24 +11,21 @@ object MangleColours extends Arguments {
   def main(args : Array[String]) : Unit = {
 
     val opts = processArgs(args, defaultArgs())
-    val conf = SparkUtils.createConfig("Example-Clone", "local[2]")
+    val conf = SparkUtils.createConfig("Example-Red", "local[2]")
     val sc = new SparkContext(conf)
 
     val (metaData, baseMeta) = GeoTiffMeta(opts("input"))
 
-    println(metaData)
-
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
-     /*.map { case (i, d) =>
+     .map { case (i, d) =>
         i.band match {
           case 0 => i -> 255
           case _ => i -> d
         }
-     }*/
+     }
 
     GeoSparkUtils.saveGeoTiff(converted, metaData, baseMeta, opts("output"))
 
-    println("Joining up output files...")
     SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), "part-", opts("output") + "/data.tif")
 
     sc.stop()

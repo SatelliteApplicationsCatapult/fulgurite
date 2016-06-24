@@ -16,3 +16,9 @@ like the following should join things up
 ```SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), "part-", opts("output") + "/data.tif")```
 
 The Class `MangleColours` gives a good example of how to use these.
+
+## License
+This project is licensed under the LGPL3
+
+## Thanks
+Thanks to the spark project and JAI for building code this is built on top of.
