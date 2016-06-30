@@ -1,4 +1,4 @@
-package org.catapult.sa.geoprocess
+package org.catapult.sa.examples
 
 import java.util.Date
 
@@ -17,12 +17,12 @@ object MangleColours extends Arguments {
     val (metaData, baseMeta) = GeoTiffMeta(opts("input"))
 
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
-     .map { case (i, d) =>
+     /*.map { case (i, d) =>
         i.band match {
           case 0 => i -> 255
           case _ => i -> d
         }
-     }
+     }*/
 
     GeoSparkUtils.saveGeoTiff(converted, metaData, baseMeta, opts("output"))
 
@@ -36,9 +36,9 @@ object MangleColours extends Arguments {
   override def allArgs(): List[Argument] = List("input", "output")
 
   override def defaultArgs(): Map[String, String] = Map(
-    //"input" -> "c:/data/will/16April2016_Belfast_RGB_1.tif",
+    "input" -> "c:/data/will/16April2016_Belfast_RGB_1.tif",
 
-    "input" -> "C:/data/Will/OUREA_SiteB_24102915_WV_processedImg_mk2.tif",
+    //"input" -> "C:/data/Will/OUREA_SiteB_24102915_WV_processedImg_mk2.tif",
     //"input" -> "C:/Users/Wil.Selwood/Downloads/S1A_IW_SLC__1SDV_20160610T175738_20160610T175806_011652_011D4B_9469.SAFE/measurement/s1a-iw1-slc-vh-20160610t175739-20160610t175804-011652-011d4b-001.tiff",
     "output" -> ("c:/data/will/test_" + new Date().getTime.toString + ".tif")
   )

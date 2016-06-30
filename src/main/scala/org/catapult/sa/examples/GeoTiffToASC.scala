@@ -1,4 +1,4 @@
-package org.catapult.sa.geoprocess
+package org.catapult.sa.examples
 
 import java.io.{FileOutputStream, PrintStream}
 import java.util.Date

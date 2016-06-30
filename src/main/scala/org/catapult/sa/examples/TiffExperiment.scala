@@ -1,4 +1,4 @@
-package org.catapult.sa.geoprocess
+package org.catapult.sa.examples
 
 import java.io._
 import javax.imageio.ImageIO

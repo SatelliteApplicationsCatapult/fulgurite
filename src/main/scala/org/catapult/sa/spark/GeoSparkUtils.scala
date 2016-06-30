@@ -5,7 +5,7 @@ import javax.imageio.ImageIO
 import javax.imageio.metadata.IIOMetadata
 
 import com.github.jaiimageio.impl.plugins.tiff.TIFFImageMetadata
-import com.github.jaiimageio.plugins.tiff.{BaselineTIFFTagSet, TIFFField, TIFFTag}
+import com.github.jaiimageio.plugins.tiff.{BaselineTIFFTagSet, GeoTIFFTagSet, TIFFField, TIFFTag}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{BytesWritable, LongWritable}
 import org.apache.spark.SparkContext
@@ -47,23 +47,21 @@ object GeoSparkUtils {
     implicit val indexOrdering = Index.orderingByBandOutput
 
     val convertToBytes = createBytes(meta)
-    rdd.map { case (i, d) => i -> convertToBytes(i.band, d) }
-      .sortByKey(ascending = true, 512) // TODO: optimise based on the size of the image.
-      .map { case (i, b) => new BytesWritable(Array.emptyByteArray) -> new BytesWritable(b) }
+    rdd.sortByKey(ascending = true, 100) // TODO: optimise based on the size of the image.
+      .map { case (i, d) => new BytesWritable(Array.emptyByteArray) -> new BytesWritable(convertToBytes(i.band, d)) }
       .saveAsNewAPIHadoopFile(path, classOf[BytesWritable], classOf[BytesWritable], classOf[RawBinaryOutputFormat])
 
     saveGeoTiffMetaData(meta, baseMeta, path)
   }
 
   def saveGeoTiffMetaData(meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String) : Unit = {
-    val clonedMeta = baseMeta
 
     val ios = ImageIO.createImageOutputStream(new File(path, "header.tiff"))
     val writers = ImageIO.getImageWritersByFormatName("tiff")
     if (writers.hasNext) {
       val writer = writers.next()
       writer.setOutput(ios)
-      writer.prepareWriteSequence(clonedMeta)
+      writer.prepareWriteSequence(baseMeta)
 
       var headerNext = ios.getStreamPosition
       val header = headerNext - 4
@@ -75,20 +73,25 @@ object GeoSparkUtils {
       // Write the pointer to the first IFD after the header.
       ios.writeInt(headerNext.toInt)
 
-      val rootIFD = clonedMeta.asInstanceOf[TIFFImageMetadata].getRootIFD
+      val rootIFD = baseMeta.asInstanceOf[TIFFImageMetadata].getRootIFD
 
       // update the ifd and make sure it matches the meta object.
       val base = BaselineTIFFTagSet.getInstance
-      val numRows = (meta.height * meta.samplesPerPixel).asInstanceOf[Int]
+      val geoTiffBase = GeoTIFFTagSet.getInstance
+      val numRows = meta.height.asInstanceOf[Int] * meta.samplesPerPixel
       //val numColumns = meta.width * meta.bytesPerSample.sum
       rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_IMAGE_WIDTH), meta.width.toInt))
       rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_IMAGE_LENGTH), meta.height.toInt))
 
+      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_SAMPLES_PER_PIXEL), meta.samplesPerPixel))
+      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_BITS_PER_SAMPLE), TIFFTag.TIFF_SHORT, meta.samplesPerPixel, meta.bitsPerSample.map(_.toChar)))
+      rootIFD.addTIFFField(new TIFFField(geoTiffBase.getTag(GeoTIFFTagSet.TAG_MODEL_PIXEL_SCALE), TIFFTag.TIFF_DOUBLE, 3, meta.pixelScales))
+
       // given we have just updated the size we should also update the number of offset and byte count places to be filled in later
-      //rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_OFFSETS)
+      rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_OFFSETS)
       rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_STRIP_OFFSETS), TIFFTag.TIFF_LONG, numRows))
 
-      //rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS)
+      rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS)
       rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS), TIFFTag.TIFF_LONG, numRows))
 
       // Write the IFD
@@ -97,21 +100,22 @@ object GeoSparkUtils {
       ios.writeInt(0)
 
       ios.flush()
-      val startPoint = rootIFD.getLastPosition
 
+      val startPoint = rootIFD.getLastPosition
       // Now go back and update the IFD with the position offsets of the strips
       ios.seek(rootIFD.getStripOrTileOffsetsPosition)
       0.until(meta.samplesPerPixel).foreach { s =>
         val rowWidth = meta.width * meta.bytesPerSample(s)
+        val bandsOffset = startPoint + meta.bytesPerSample.take(s).map(_ * meta.width * meta.height).sum
         0L.until(meta.height).foreach { i =>
-          val chunk = startPoint + (i * rowWidth)
+          val chunk = bandsOffset + (i * rowWidth)
           ios.writeInt(chunk.asInstanceOf[Int])
         }
       }
 
       // Finally update the row byte lengths
       ios.seek(rootIFD.getStripOrTileByteCountsPosition)
-      0.until(meta.samplesPerPixel).foreach {s =>
+      0.until(meta.samplesPerPixel).foreach { s =>
         val rowWidth = meta.width * meta.bytesPerSample(s)
         0L.until(meta.height).foreach { i =>
           ios.writeInt(rowWidth.asInstanceOf[Int])
@@ -137,7 +141,6 @@ object GeoSparkUtils {
         case 32 => i -> (((b(3) & 0xFF) << 24) | ((b(2) & 0xFF) << 16) | ((b(1) & 0xFF) << 8) | (b(0) & 0xFF))
         case _ => throw new UnsupportedOperationException("can not yet handle this many bit colours. Find this error and implement")
       }
-
     }
   }
 

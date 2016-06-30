@@ -1,4 +1,4 @@
-package org.catapult.sa.geoprocess
+package org.catapult.sa.examples
 
 import java.util.Date
 
@@ -22,11 +22,15 @@ object DownSample extends Arguments {
     val sampleSize = opts("group").toInt
 
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
-        .map { case (i, d) => i.groupFunction(sampleSize) -> d }
+        .map { case (i, d) => i.groupFunction(sampleSize) -> (d, i) }
         .groupByKey(100)
-        .map { case (i, d) => i -> (d.sum / d.size) }
+        //.aggregateByKey((0, 0))({(a, b) => (a._1 + 1) -> (a._2 + b) }, { (a, b) => (a._1 + b._1 ) -> (a._2 + b._2)})
+        .map { case (i, d) => i -> (d.map(_._1).sum / d.size) }
+      .cache()
 
-    val newMeta = GeoTiffMeta(metaData.width / sampleSize, metaData.height / sampleSize, metaData.samplesPerPixel, metaData.bitsPerSample, 0, 0, metaData.tiePoints, metaData.pixelScales)
+    val newMeta = GeoTiffMeta(metaData.width / sampleSize, metaData.height / sampleSize, metaData.samplesPerPixel, metaData.bitsPerSample, 0, 0, metaData.tiePoints, metaData.pixelScales.map(_ * sampleSize))
+
+    println("converted Count: " + converted.count())
 
     GeoSparkUtils.saveGeoTiff(converted, newMeta, rawMeta, opts("output"))
 

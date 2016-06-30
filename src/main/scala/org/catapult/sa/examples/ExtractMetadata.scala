@@ -1,4 +1,4 @@
-package org.catapult.sa.geoprocess
+package org.catapult.sa.examples
 
 import java.io.{File, IOException, PrintStream}
 import javax.imageio.ImageIO
@@ -11,7 +11,7 @@ import org.w3c.dom.Node
   */
 object ExtractMetadata extends Arguments {
   override def defaultArgs(): Map[String, String] = Map(
-    "in" -> "C:/data/Will/OUREA_SiteB_24102915_WV_processedImg_mk2.tif"
+    "in" -> "C:/data/Will/test_1467126038862.tif/data.tif"
   )
 
   override def allArgs(): List[Argument] = List("in")
@@ -27,7 +27,6 @@ object ExtractMetadata extends Arguments {
     val iis = ImageIO.createImageInputStream(file)
     val readers = ImageIO.getImageReaders(iis)
 
-
     if (readers.hasNext) {
       val reader = readers.next()
       reader.setInput(iis, true, false)
@@ -40,9 +39,6 @@ object ExtractMetadata extends Arguments {
         //displayMeta(output, meta.getAsTree(k), 0)
         displayMeta(System.out, meta.getAsTree(k), 0)
       })
-
-      //output.flush()
-      //output.close()
 
       reader.dispose()
     }
