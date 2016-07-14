@@ -1,4 +1,4 @@
-package org.catapult.sa.geotiff
+package org.catapult.sa.fulgurite.geotiff
 
 /*
  * (c) 2004 Mike Nidel
@@ -61,6 +61,8 @@ object GeoTiffIIOMetadataAdapter {
 
   val StripOffsets : Int = 273
   val StripByteCounts : Int = 279
+
+  val PhotometricInterpretation : Int = 262
 
   /**
     * GTModelTypeGeoKey
@@ -714,6 +716,19 @@ class GeoTiffIIOMetadataAdapter(val imageMetadata: IIOMetadata) {
       return getTiffLongs(recOffsets).last + getTiffLongs(recBytes).last
     }
     -1L
+  }
+
+  def getPhotometricInterpretation : String = {
+    val field = getTiffField(GeoTiffIIOMetadataAdapter.PhotometricInterpretation)
+    if (field != null) {
+      getTiffShort(field, 0) match {
+        case 0 => return "WhiteIsZero"
+        case 1 => return "BlackIsZero"
+        case 2 => return "RGB"
+        case _ => throw new RuntimeException("Unknown PhotometricInterpretation. Find this error and add mapping")
+      }
+    }
+    null
   }
 
   def getGeoKeyRecord(keyID: Int): GeoKeyRecord = {

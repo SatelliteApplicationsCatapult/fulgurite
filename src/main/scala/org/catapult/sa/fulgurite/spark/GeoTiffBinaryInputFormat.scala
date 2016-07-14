@@ -1,4 +1,4 @@
-package org.catapult.sa.spark
+package org.catapult.sa.fulgurite.spark
 
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.{BytesWritable, LongWritable}

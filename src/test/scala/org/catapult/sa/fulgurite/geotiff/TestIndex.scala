@@ -1,4 +1,4 @@
-package org.catapult.sa.geotiff
+package org.catapult.sa.fulgurite.geotiff
 
 import org.junit.Test
 import org.junit.Assert._

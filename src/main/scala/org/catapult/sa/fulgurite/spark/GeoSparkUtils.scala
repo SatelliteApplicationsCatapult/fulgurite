@@ -1,4 +1,4 @@
-package org.catapult.sa.spark
+package org.catapult.sa.fulgurite.spark
 
 import java.io.File
 import javax.imageio.ImageIO
@@ -10,7 +10,8 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{BytesWritable, LongWritable}
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.catapult.sa.geotiff.{GeoTiffMeta, Index}
+import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
+import org.catapult.sa.geotiff.Index
 
 /**
   * Utility functions for working with geo tiff files.
@@ -26,8 +27,7 @@ object GeoSparkUtils {
     * @return RDD of Index to DataPoint
     */
   def GeoTiffRDD(path : String, meta: GeoTiffMeta, sc : SparkContext) : RDD[(Index, Int)] = {
-    // rounded up to whole bytes
-    val bytesPerRecord = meta.bytesPerSample.max  // TODO: this won't work if any of the bands have different pixel widths.
+    val bytesPerRecord = meta.bytesPerSample.max  // TODO: this won't work if any of the bands have different byte widths.
 
     val inputConf = new Configuration()
     inputConf.setInt(GeoTiffBinaryInputFormat.RECORD_LENGTH_PROPERTY, bytesPerRecord)
@@ -43,11 +43,26 @@ object GeoSparkUtils {
     ).map(createKeyValue(meta))
   }
 
+  /**
+    * Save a geotiff based on the data in the rdd and the provided metadata.
+    *
+    * The baseMeta should come from the origianl file.
+    *
+    * TODO: Remove the need for the baseMeta
+    *
+    * @param rdd data for the bands
+    * @param meta metadata for the
+    * @param baseMeta original metadata to base the new metadata on.
+    * @param path where to create the output.
+    */
   def saveGeoTiff(rdd : RDD[(Index,  Int)], meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String) : Unit = {
     implicit val indexOrdering = Index.orderingByBandOutput
 
+    // TODO: First guess. Check and fix this.
+    val numPartitions = (Math.log(meta.height * meta.width * meta.samplesPerPixel) * 100).toInt
+
     val convertToBytes = createBytes(meta)
-    rdd.sortByKey(ascending = true, 100) // TODO: optimise based on the size of the image.
+    rdd.sortByKey(ascending = true, numPartitions)
       .map { case (i, d) => new BytesWritable(Array.emptyByteArray) -> new BytesWritable(convertToBytes(i.band, d)) }
       .saveAsNewAPIHadoopFile(path, classOf[BytesWritable], classOf[BytesWritable], classOf[RawBinaryOutputFormat])
 
@@ -85,7 +100,9 @@ object GeoSparkUtils {
 
       rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_SAMPLES_PER_PIXEL), meta.samplesPerPixel))
       rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_BITS_PER_SAMPLE), TIFFTag.TIFF_SHORT, meta.samplesPerPixel, meta.bitsPerSample.map(_.toChar)))
-      rootIFD.addTIFFField(new TIFFField(geoTiffBase.getTag(GeoTIFFTagSet.TAG_MODEL_PIXEL_SCALE), TIFFTag.TIFF_DOUBLE, 3, meta.pixelScales))
+      rootIFD.addTIFFField(new TIFFField(geoTiffBase.getTag(GeoTIFFTagSet.TAG_MODEL_PIXEL_SCALE), TIFFTag.TIFF_DOUBLE,  meta.pixelScales.length, meta.pixelScales))
+
+      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_PLANAR_CONFIGURATION), 2)) // force one band after another for our own sanity
 
       // given we have just updated the size we should also update the number of offset and byte count places to be filled in later
       rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_OFFSETS)

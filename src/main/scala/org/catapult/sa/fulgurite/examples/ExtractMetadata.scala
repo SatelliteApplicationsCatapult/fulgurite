@@ -1,9 +1,10 @@
-package org.catapult.sa.examples
+package org.catapult.sa.fulgurite.examples
 
 import java.io.{File, IOException, PrintStream}
 import javax.imageio.ImageIO
 
-import org.catapult.sa.spark.{Argument, Arguments}
+import org.catapult.sa.fulgurite.spark.{Argument, Arguments}
+import org.catapult.sa.spark.Argument
 import org.w3c.dom.Node
 
 /**
@@ -11,7 +12,7 @@ import org.w3c.dom.Node
   */
 object ExtractMetadata extends Arguments {
   override def defaultArgs(): Map[String, String] = Map(
-    "in" -> "C:/data/Will/test_1467126038862.tif/data.tif"
+    "in" -> "C:/data/OUREA_SiteB_24102915_WV_processedImg-cropped.tif"
   )
 
   override def allArgs(): List[Argument] = List("in")

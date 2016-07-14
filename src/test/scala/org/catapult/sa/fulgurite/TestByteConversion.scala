@@ -1,4 +1,4 @@
-package org.catapult.sa
+package org.catapult.sa.fulgurite
 
 import org.junit.Test
 import org.junit.Assert._

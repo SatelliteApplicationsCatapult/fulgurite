@@ -1,4 +1,4 @@
-package org.catapult.sa.spark
+package org.catapult.sa.fulgurite.spark
 
 import java.io.DataOutputStream
 

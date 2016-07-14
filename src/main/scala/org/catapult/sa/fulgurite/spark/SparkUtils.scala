@@ -1,4 +1,4 @@
-package org.catapult.sa.spark
+package org.catapult.sa.fulgurite.spark
 
 import java.io._
 
@@ -33,6 +33,11 @@ object SparkUtils {
     a.appendAll(b)
     a
   }
+
+  def average(a : (Int, Int), b : Int) : (Int, Int) = (a._1 + b) -> (a._2 + 1)
+  def averageSum(a : (Int, Int), b : (Int, Int)) : (Int, Int) = (a._1 + b._1) -> (a._2 + b._2)
+
+  def finalAverage[T](d: (T, (Int, Int))) : (T, Int) = d._1 -> (d._2._1 / d._2._2)
 
   def saveRawTextFile(rdd : RDD[String], fileName : String) : Unit = {
     rdd.map(e => NullWritable.get() -> new Text(e))
@@ -85,6 +90,4 @@ object SparkUtils {
       .filter(f => !toKeep.contains(f.getName))
       .foreach(f => f.delete())
   }
-
-
 }

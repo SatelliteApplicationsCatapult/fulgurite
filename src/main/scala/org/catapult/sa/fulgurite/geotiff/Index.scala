@@ -1,4 +1,4 @@
-package org.catapult.sa.geotiff
+package org.catapult.sa.fulgurite.geotiff
 
 /**
   * Index contains the location in the image of a pixel

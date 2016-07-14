@@ -1,9 +1,10 @@
-package org.catapult.sa.examples
+package org.catapult.sa.fulgurite.examples
 
 import java.util.Date
 
 import org.apache.spark.SparkContext
-import org.catapult.sa.geotiff.GeoTiffMeta
+import org.catapult.sa.fulgurite.geotiff.GeoTiffMeta
+import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils, SparkUtils}
 import org.catapult.sa.spark._
 
 object MangleColours extends Arguments {

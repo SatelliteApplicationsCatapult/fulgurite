@@ -1,8 +1,9 @@
-package org.catapult.sa.examples
+package org.catapult.sa.fulgurite.examples
 
 import org.apache.spark.SparkContext
-import org.catapult.sa.geotiff.GeoTiffMeta
-import org.catapult.sa.spark.{Argument, Arguments, GeoSparkUtils, SparkUtils}
+import org.catapult.sa.fulgurite.geotiff.GeoTiffMeta
+import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils, SparkUtils}
+import org.catapult.sa.spark.GeoSparkUtils
 
 /**
   * generate a histogram from an image.

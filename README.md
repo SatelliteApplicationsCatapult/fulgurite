@@ -1,6 +1,6 @@
-# Reasonable Excuse
+# Fulgurite
 
-Reasonable Excuse is a project to experiment with using spark to process GeoTIF images.
+Fulgurite is a project to use spark to process GeoTIF images.
 
 ## Overview
 
@@ -15,7 +15,28 @@ like the following should join things up
 
 ```SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), "part-", opts("output") + "/data.tif")```
 
-The Class `MangleColours` gives a good example of how to use these.
+The Class `MangleColours` gives a good example of how to use these. The `org.catapult.sa.example` package contains
+several examples.
+
+## Deployment and Usage
+
+Currently this project is not in Maven. We will be working on that soon. Build a Jar from this project with the
+`mvn package` target or use the `mvn install` and then include
+
+```
+  <dependency>
+    <groupId>org.catapult.sa</groupId>
+    <artifactId>fulgurite</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </dependency>
+```
+
+Any problems with this process please raise a bug.
+
+## Contributing
+
+All contributions to this project are warmly welcomed. If you have found bugs please raise them. We probably won't find
+ if you don't tell us about it.
 
 ## License
 This project is licensed under the LGPL3

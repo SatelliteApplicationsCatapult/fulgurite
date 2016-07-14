@@ -1,4 +1,4 @@
-package org.catapult.sa.geotiff
+package org.catapult.sa.fulgurite.geotiff
 
 import java.io.{File, IOException}
 import javax.imageio.ImageIO
@@ -12,7 +12,7 @@ import javax.imageio.metadata.IIOMetadata
 case class GeoTiffMeta(width : Long, height : Long,
                        samplesPerPixel : Int, bitsPerSample: Array[Int],
                        startOffset : Long, endOffset : Long,
-                       tiePoints : Array[Double], pixelScales : Array[Double]) {
+                       tiePoints : Array[Double], pixelScales : Array[Double], colourMode : String) {
 
   lazy val bytesPerSample = bitsPerSample.map(b => (b + 7) / 8)
 
@@ -20,7 +20,8 @@ case class GeoTiffMeta(width : Long, height : Long,
     "GeoTiffMeta(width=" + width + " height=" + height +
       " samplesPerPixel=" + samplesPerPixel + " bitsPerSample=[" + bitsPerSample.mkString(", ") +
     "] startOffset=" + startOffset + " endOffset=" + endOffset +
-      " tiePoints=[" + (if (tiePoints == null || tiePoints.isEmpty) { "" } else { tiePoints.mkString(", ") }) + "] pixelScales=[" + (if (pixelScales == null || pixelScales.isEmpty) { "" } else { pixelScales.mkString(", ") }) + "])"
+      " tiePoints=[" + (if (tiePoints == null || tiePoints.isEmpty) { "" } else { tiePoints.mkString(", ") }) +
+      "] pixelScales=[" + (if (pixelScales == null || pixelScales.isEmpty) { "" } else { pixelScales.mkString(", ") }) + "] colourMode=" + colourMode + " )"
   }
 }
 
@@ -32,7 +33,8 @@ object GeoTiffMeta {
     GeoTiffMeta(geoMeta.getWidth, geoMeta.getHeight,
       geoMeta.getSamplesPerPixel, geoMeta.getBitsPerSample,
       geoMeta.getFirstStripOffset, geoMeta.getEndOffset,
-      geoMeta.getModelTiePoints, geoMeta.getModelPixelScales)
+      geoMeta.getModelTiePoints, geoMeta.getModelPixelScales,
+      geoMeta.getPhotometricInterpretation)
   }
 
 

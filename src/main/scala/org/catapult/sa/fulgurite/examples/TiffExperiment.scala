@@ -1,10 +1,11 @@
-package org.catapult.sa.examples
+package org.catapult.sa.fulgurite.examples
 
 import java.io._
 import javax.imageio.ImageIO
 
-import org.catapult.sa.geotiff.GeoTiffMeta
-import org.catapult.sa.spark.{Argument, Arguments}
+import org.catapult.sa.fulgurite.geotiff.GeoTiffMeta
+import org.catapult.sa.fulgurite.spark.{Argument, Arguments}
+import org.catapult.sa.spark.Argument
 import org.w3c.dom.Node
 
 /**
