@@ -11,7 +11,6 @@ import org.apache.hadoop.io.{BytesWritable, LongWritable}
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
-import org.catapult.sa.geotiff.Index
 
 /**
   * Utility functions for working with geo tiff files.

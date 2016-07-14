@@ -5,7 +5,6 @@ import javax.imageio.ImageIO
 
 import org.catapult.sa.fulgurite.geotiff.GeoTiffMeta
 import org.catapult.sa.fulgurite.spark.{Argument, Arguments}
-import org.catapult.sa.spark.Argument
 import org.w3c.dom.Node
 
 /**

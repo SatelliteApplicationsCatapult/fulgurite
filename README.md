@@ -15,7 +15,7 @@ like the following should join things up
 
 ```SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), "part-", opts("output") + "/data.tif")```
 
-The Class `MangleColours` gives a good example of how to use these. The `org.catapult.sa.example` package contains
+The Class `MangleColours` gives a good example of how to use these. The `org.catapult.sa.fulgurite.examples` package contains
 several examples.
 
 ## Deployment and Usage
@@ -42,4 +42,5 @@ All contributions to this project are warmly welcomed. If you have found bugs pl
 This project is licensed under the LGPL3
 
 ## Thanks
-Thanks to the spark project and JAI for building code this is built on top of.
+Thanks to the spark project and JAI for building code this is built on top of. Thanks to Mike Nidel for the metadata
+adapter which we converted to Scala and updated a bit.

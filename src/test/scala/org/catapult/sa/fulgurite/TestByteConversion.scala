@@ -3,9 +3,6 @@ package org.catapult.sa.fulgurite
 import org.junit.Test
 import org.junit.Assert._
 
-/**
-  * Created by wil.selwood on 07/06/2016.
-  */
 class TestByteConversion {
 
   @Test
