@@ -44,7 +44,7 @@ object SparkUtils {
       .saveAsNewAPIHadoopFile(fileName, classOf[NullWritable], classOf[Text], classOf[RawTextOutputFormat])
   }
 
-  def joinOutputFiles(headerPath : String, path : String, prefix : String, outputName : String) : Unit = {
+  def joinOutputFiles(headerPath: String, path: String, outputName: String, prefix: String = "part-"): Unit = {
     val dir = new File(path)
     if (! dir.isDirectory) {
       throw new IOException("Path is not a directory")

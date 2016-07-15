@@ -9,7 +9,7 @@ import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils, Spar
   */
 object Histogram extends Arguments {
   def main(args : Array[String]) : Unit = {
-    val opts = processArgs(args, defaultArgs())
+    val opts = processArgs(args)
     val conf = SparkUtils.createConfig("Example-histogram", "local[2]")
     val sc = new SparkContext(conf)
     val (metaData, baseMeta) = GeoTiffMeta(opts("input"))

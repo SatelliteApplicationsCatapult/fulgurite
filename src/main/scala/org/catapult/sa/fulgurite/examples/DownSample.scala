@@ -13,7 +13,7 @@ object DownSample extends Arguments {
 
   def main(args : Array[String]) : Unit = {
 
-    val opts = processArgs(args, defaultArgs())
+    val opts = processArgs(args)
     val conf = SparkUtils.createConfig("Example-Convert", "local[2]")
     val sc = new SparkContext(conf)
 
@@ -30,7 +30,7 @@ object DownSample extends Arguments {
 
     GeoSparkUtils.saveGeoTiff(converted, newMeta, rawMeta, opts("output"))
 
-    SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), "part-", opts("output") + "/data.tif")
+    SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), opts("output") + "/data.tif")
     sc.stop()
   }
 

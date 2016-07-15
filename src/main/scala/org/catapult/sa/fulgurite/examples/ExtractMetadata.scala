@@ -17,7 +17,7 @@ object ExtractMetadata extends Arguments {
   override def allArgs(): List[Argument] = List("in")
 
   def main(args : Array[String]) : Unit = {
-    val opts = processArgs(args, defaultArgs())
+    val opts = processArgs(args)
     val file = new File(opts("in"))
 
     if (file == null || !file.canRead || !file.isFile) {
@@ -32,19 +32,13 @@ object ExtractMetadata extends Arguments {
       reader.setInput(iis, true, false)
 
       val meta = reader.getImageMetadata(0)
-
-      //val output = new PrintStream(new FileOutputStream(opts("out")))
-
       meta.getMetadataFormatNames.foreach(k => {
-        //displayMeta(output, meta.getAsTree(k), 0)
         displayMeta(System.out, meta.getAsTree(k), 0)
       })
 
       reader.dispose()
     }
-
   }
-
 
   private def displayMeta(ps : PrintStream, node : Node, level : Int) : Unit = {
     indent(ps, level)

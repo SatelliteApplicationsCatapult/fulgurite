@@ -10,7 +10,7 @@ trait Arguments {
 
   private lazy val allowed = allArgs().map(a => a.name -> a).toMap
 
-  def processArgs(args : Array[String], defaultArgs : Map[String, String]) : Map[String, String] = {
+  def processArgs(args : Array[String], da : Map[String, String] = defaultArgs()) : Map[String, String] = {
 
     def loop(a : List[String], result : Map[String, String]) : Map[String, String] = {
       a match {
@@ -31,7 +31,7 @@ trait Arguments {
       }
     }
 
-    loop(args.toList, defaultArgs)
+    loop(args.toList, da)
   }
 
 }

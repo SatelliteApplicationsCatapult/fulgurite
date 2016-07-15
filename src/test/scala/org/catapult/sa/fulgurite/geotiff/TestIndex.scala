@@ -49,4 +49,22 @@ class TestIndex {
     assertEquals(0, result.y)
     assertEquals(1, result.band)
   }
+
+  @Test
+  def testOrderingByBands() : Unit = {
+    val input = List(Index(4, 9, 0), Index(3, 9, 1), Index(1, 9, 0), Index(0, 9, 1))
+    val expected = List(Index(1, 9, 0), Index(4, 9, 0), Index(0, 9, 1), Index(3, 9, 1))
+    val result = input.sorted(Index.orderingByBandOutput)
+
+    assertEquals(expected, result)
+  }
+
+  @Test
+  def testOrderingByPosition() : Unit = {
+    val input = List(Index(4, 9, 0), Index(3, 9, 1), Index(1, 9, 0), Index(0, 9, 1))
+    val expected = List(Index(0, 9, 1), Index(1, 9, 0), Index(3, 9, 1), Index(4, 9, 0))
+    val result = input.sorted(Index.orderingByPositionThenBand)
+
+    assertEquals(expected, result)
+  }
 }

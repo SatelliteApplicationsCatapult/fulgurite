@@ -14,13 +14,13 @@ object GeoTiffToASC extends Arguments {
 
   def main(args : Array[String]) : Unit = {
 
-    val opts = processArgs(args, defaultArgs())
+    val opts = processArgs(args)
     val conf = SparkUtils.createConfig("Example-Convert", "local[2]")
     val sc = new SparkContext(conf)
 
     val (metaData, _) = GeoTiffMeta(opts("input"))
     val targetBand = opts("band").toInt
-    if (metaData.samplesPerPixel < targetBand) {
+    if (metaData.samplesPerPixel <= targetBand) {
       throw new IllegalArgumentException("band must be less than the number of bands in the image.")
     }
 
@@ -42,7 +42,7 @@ object GeoTiffToASC extends Arguments {
 
     SparkUtils.saveRawTextFile(converted, opts("output"))
     generateHeader(metaData, opts("output") + "/header.txt")
-    SparkUtils.joinOutputFiles(opts("output") + "/header.txt", opts("output"), "part", opts("output") + "/output.asc")
+    SparkUtils.joinOutputFiles(opts("output") + "/header.txt", opts("output"), opts("output") + "/output.asc")
     sc.stop()
     // TODO: use SparkUtils.deleteAllExcept to clean up.
   }
@@ -57,7 +57,11 @@ object GeoTiffToASC extends Arguments {
 
   private def generateHeader(meta : GeoTiffMeta, target : String): Unit = {
     val output = new PrintStream(new FileOutputStream(target))
+    generateHeader(meta, output)
+    output.close()
+  }
 
+  private def generateHeader(meta : GeoTiffMeta, output : PrintStream) : Unit = {
     output.print("ncols        ")
     output.println(meta.width)
     output.print("nrows        ")
@@ -74,8 +78,6 @@ object GeoTiffToASC extends Arguments {
     }
 
     output.print("cellsize     ")
-    output.println(meta.pixelScales.head) // TODO: don't assume square pixels
-
-    output.close()
+    output.println(meta.pixelScales.head)
   }
 }

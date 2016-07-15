@@ -26,7 +26,7 @@ object GeoSparkUtils {
     * @return RDD of Index to DataPoint
     */
   def GeoTiffRDD(path : String, meta: GeoTiffMeta, sc : SparkContext) : RDD[(Index, Int)] = {
-    val bytesPerRecord = meta.bytesPerSample.max  // TODO: this won't work if any of the bands have different byte widths.
+    val bytesPerRecord = meta.bytesPerSample.min  // TODO: this won't work if any of the bands have different byte widths.
 
     val inputConf = new Configuration()
     inputConf.setInt(GeoTiffBinaryInputFormat.RECORD_LENGTH_PROPERTY, bytesPerRecord)
