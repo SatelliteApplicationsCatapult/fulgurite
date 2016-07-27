@@ -15,7 +15,7 @@ object DownSample extends Arguments {
 
     val opts = processArgs(args)
     val conf = SparkUtils.createConfig("Example-Convert", "local[1]")
-    val sc = new SparkContext(conf)
+    val sc = SparkContext.getOrCreate(conf)
 
     val (metaData, rawMeta) = GeoTiffMeta(opts("input"))
 

@@ -11,7 +11,7 @@ object Histogram extends Arguments {
   def main(args : Array[String]) : Unit = {
     val opts = processArgs(args)
     val conf = SparkUtils.createConfig("Example-histogram", "local[2]")
-    val sc = new SparkContext(conf)
+    val sc = SparkContext.getOrCreate(conf)
     val (metaData, baseMeta) = GeoTiffMeta(opts("input"))
 
     GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)

@@ -15,7 +15,7 @@ class TestReading {
   def basicReadingTest(): Unit = {
 
     val conf = SparkUtils.createConfig("basicReadingTest", "local[2]")
-    val sc = new SparkContext(conf)
+    val sc = SparkContext.getOrCreate(conf)
 
     val (metaData, _) = GeoTiffMeta("src/test/resources/data_chunked.tif")
     val result = GeoSparkUtils.GeoTiffRDD("src/test/resources/data_chunked.tif", metaData, sc, 10 )
@@ -25,9 +25,6 @@ class TestReading {
     val expected = (0 until 11).flatMap(y => (0 until 11).flatMap(x => List(255, 128, 0))).toArray
 
     assertArrayEquals(expected, result)
-
-    sc.stop()
-
 
   }
 

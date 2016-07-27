@@ -8,6 +8,7 @@
 
   <properties>
     <scala.version>2.11.8</scala.version>
+    <hadoop.home>${env.HADOOP_HOME}</hadoop.home>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -85,6 +86,16 @@
           <args>
             <arg>-target:jvm-1.8</arg>
           </args>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.surefire</groupId>
+        <artifactId>surefire-junit4</artifactId>
+        <version>2.19.1</version>
+        <configuration>
+          <systemPropertyVariables>
+            <HADOOP_HOME>${hadoop.home}</HADOOP_HOME>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
     </plugins>

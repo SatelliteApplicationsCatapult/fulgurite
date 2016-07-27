@@ -16,7 +16,7 @@ object GeoTiffToASC extends Arguments {
 
     val opts = processArgs(args)
     val conf = SparkUtils.createConfig("Example-Convert", "local[2]")
-    val sc = new SparkContext(conf)
+    val sc = SparkContext.getOrCreate(conf)
 
     val (metaData, _) = GeoTiffMeta(opts("input"))
     val targetBand = opts("band").toInt

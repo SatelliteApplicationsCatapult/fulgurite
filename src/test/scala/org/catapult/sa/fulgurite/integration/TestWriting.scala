@@ -24,7 +24,7 @@ class TestWriting {
     new File(outputName).deleteOnExit()
 
     val conf = SparkUtils.createConfig("TestWriting", "local[2]")
-    val sc = new SparkContext(conf)
+    val sc = SparkContext.getOrCreate(conf)
 
     val (metaData, baseMeta) = GeoTiffMeta("src/test/resources/data_chunked.tif")
 
@@ -41,8 +41,6 @@ class TestWriting {
 
     assertArrayEquals(expected, result)
 
-    sc.stop()
-
   }
 
 
@@ -52,7 +50,7 @@ class TestWriting {
     new File(outputName).deleteOnExit()
 
     val conf = SparkUtils.createConfig("TestWriting", "local[2]")
-    val sc = new SparkContext(conf)
+    val sc = SparkContext.getOrCreate(conf)
 
     val (meta, baseMeta) = GeoTiffMeta("src/test/resources/data_chunked.tif") // Blarg get hold of base meta.
 
@@ -68,8 +66,6 @@ class TestWriting {
 
     GeoSparkUtils.saveGeoTiff(inputRDD, metaData, baseMeta, outputName, 10)
     SparkUtils.joinOutputFiles( outputName + "/header.tiff", outputName + "/", outputName + "/data.tif")
-
-    sc.stop()
 
     val result = new Array[Byte](4000)
     val expected = new Array[Byte](4000)

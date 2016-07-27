@@ -12,7 +12,7 @@ object MangleColours extends Arguments {
 
     val opts = processArgs(args)
     val conf = SparkUtils.createConfig("Example-Red", "local[2]")
-    val sc = new SparkContext(conf)
+    val sc = SparkContext.getOrCreate(conf)
 
     val (metaData, baseMeta) = GeoTiffMeta(opts("input"))
 

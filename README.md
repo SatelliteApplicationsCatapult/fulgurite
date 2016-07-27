@@ -34,6 +34,9 @@ Currently this project is not in Maven. We will be working on that soon. Build a
   </dependency>
 ```
 
+**Please note:** building on windows requires the use of the hadoop `winutils.exe` and the `HADOOP_HOME` environment 
+variable being set.
+
 If there are any problems with this process, please raise a bug.
 
 ## Contributing
