@@ -5,6 +5,7 @@ import java.io._
 import org.apache.hadoop.io.{NullWritable, Text}
 import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD
+import org.catapult.sa.fulgurite.geotiff.Index
 
 import scala.collection.mutable
 
@@ -13,13 +14,13 @@ import scala.collection.mutable
   */
 object SparkUtils {
 
-  def createConfig(appName : String, master : String) : SparkConf = new SparkConf()
+  def createConfig(appName : String, master : String = "local[*]") : SparkConf = new SparkConf()
       .setAppName(appName)
       .setMaster(master)
-      .set("spark.memory.fraction", "0.66")
       .set("spark.rdd.compress", "true")
       .set("spark.io.compression.codec", "lz4")
       .set("spark.io.compression.lz4.blockSize", "16K")
+      .registerKryoClasses(Array(classOf[Index]))
 
 
   // Version of append that can be used to aggregate
@@ -78,16 +79,5 @@ object SparkUtils {
 
     outputStream.flush()
     outputStream.close()
-  }
-
-  def deleteAllExcept(path : String, toKeep : String*) : Unit = {
-    val dir = new File(path)
-    if (! dir.isDirectory) {
-      throw new IOException("Path is not a directory")
-    }
-
-    dir.listFiles()
-      .filter(f => !toKeep.contains(f.getName))
-      .foreach(f => f.delete())
   }
 }

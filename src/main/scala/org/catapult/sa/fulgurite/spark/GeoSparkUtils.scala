@@ -8,6 +8,7 @@ import com.github.jaiimageio.impl.plugins.tiff.TIFFImageMetadata
 import com.github.jaiimageio.plugins.tiff.{BaselineTIFFTagSet, GeoTIFFTagSet, TIFFField, TIFFTag}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{BytesWritable, LongWritable}
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
@@ -18,20 +19,24 @@ import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
 object GeoSparkUtils {
 
   /**
-    * Read a geotiff and return pixels as records.
+    * Read a GeoTiff and return pixels as records.
     *
     * @param path path to the file to read
     * @param meta the metadata from the file.
     * @param sc spark context to use.
+    * @param partitionSize size of the partitions to create. Tune this for your environment.
     * @return RDD of Index to DataPoint
     */
-  def GeoTiffRDD(path : String, meta: GeoTiffMeta, sc : SparkContext) : RDD[(Index, Int)] = {
+  def GeoTiffRDD(path : String, meta: GeoTiffMeta, sc : SparkContext, partitionSize : Long = 400000) : RDD[(Index, Int)] = {
     val bytesPerRecord = meta.bytesPerSample.min  // TODO: this won't work if any of the bands have different byte widths.
+                                                  // We don't have any examples where this is the case. If this causes
+                                                  // problems please raise a bug on github and include an example image
 
     val inputConf = new Configuration()
     inputConf.setInt(GeoTiffBinaryInputFormat.RECORD_LENGTH_PROPERTY, bytesPerRecord)
     inputConf.setLong(GeoTiffBinaryInputFormat.RECORD_START_OFFSET_PROPERTY, meta.startOffset)
     inputConf.setLong(GeoTiffBinaryInputFormat.RECORD_END_OFFSET_PROPERTY, meta.endOffset)
+    inputConf.setLong(FileInputFormat.SPLIT_MAXSIZE, partitionSize)
 
     sc.newAPIHadoopFile[LongWritable, BytesWritable, GeoTiffBinaryInputFormat](
       path,
@@ -45,7 +50,13 @@ object GeoSparkUtils {
   /**
     * Save a geotiff based on the data in the rdd and the provided metadata.
     *
-    * The baseMeta should come from the origianl file.
+    * The baseMeta should come from the original file.
+    *
+    * The numPartitions is used by the sorting that is required by this for the output to end up non mangled. You will
+    * want to tune this depending on the images you are loading and the size of your cluster. We recommend some
+    * experiments here to work out the best value for your system.
+    *
+    * NOTE: On windows this will require the HADOOP_HOME environment variable to be set to where the winutils.exe is.
     *
     * TODO: Remove the need for the baseMeta
     *
@@ -53,12 +64,14 @@ object GeoSparkUtils {
     * @param meta metadata for the
     * @param baseMeta original metadata to base the new metadata on.
     * @param path where to create the output.
+    * @param numPartitions how many partitions to use when sorting and also how many output files get created.
     */
-  def saveGeoTiff(rdd : RDD[(Index,  Int)], meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String) : Unit = {
-    implicit val indexOrdering = Index.orderingByBandOutput
-
-    // TODO: First guess. Check and fix this.
-    val numPartitions = (Math.log(meta.height * meta.width * meta.samplesPerPixel) * 100).toInt
+  def saveGeoTiff(rdd : RDD[(Index,  Int)], meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String, numPartitions : Int = 1000) : Unit = {
+    implicit val indexOrdering = meta.planarConfiguration match {
+      case 1 => Index.orderingByPositionThenBand
+      case 2 => Index.orderingByBandOutput
+      case _ => throw new IllegalArgumentException("unknown planar configuration " + meta.planarConfiguration)
+    }
 
     val convertToBytes = createBytes(meta)
     rdd.sortByKey(ascending = true, numPartitions)
@@ -101,7 +114,7 @@ object GeoSparkUtils {
       rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_BITS_PER_SAMPLE), TIFFTag.TIFF_SHORT, meta.samplesPerPixel, meta.bitsPerSample.map(_.toChar)))
       rootIFD.addTIFFField(new TIFFField(geoTiffBase.getTag(GeoTIFFTagSet.TAG_MODEL_PIXEL_SCALE), TIFFTag.TIFF_DOUBLE,  meta.pixelScales.length, meta.pixelScales))
 
-      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_PLANAR_CONFIGURATION), 2)) // force one band after another for our own sanity
+      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_PLANAR_CONFIGURATION), meta.planarConfiguration))
 
       // given we have just updated the size we should also update the number of offset and byte count places to be filled in later
       rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_OFFSETS)
@@ -144,12 +157,19 @@ object GeoSparkUtils {
 
   private def createKeyValue(meta : GeoTiffMeta) : ((LongWritable, BytesWritable)) => (Index, Int) = {
     val width = meta.width
+    val height = meta.height
     val bandLength = meta.height * meta.width
     val bands = meta.samplesPerPixel
     val pixelWidths = meta.bitsPerSample
 
+    val indexBuilder = meta.planarConfiguration match {
+      case 1 => (i: Long) => Index.createChunky(i, width, height, bands)
+      case 2 => (i: Long) => Index.createPlanar(i, width, bandLength, bands)
+      case _ => throw new IllegalArgumentException("Unknown planar configuration " + meta.planarConfiguration)
+    }
+
     (e : (LongWritable, BytesWritable)) => {
-      val i = Index.create(e._1.get(), width, bandLength, bands)
+      val i = indexBuilder(e._1.get())
       val b = e._2.getBytes
       pixelWidths(i.band) match {
         case 8 => i -> (0xFF & b(0))

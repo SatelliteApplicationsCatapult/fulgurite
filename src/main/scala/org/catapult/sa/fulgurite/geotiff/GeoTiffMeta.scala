@@ -12,7 +12,7 @@ import javax.imageio.metadata.IIOMetadata
 case class GeoTiffMeta(width : Long, height : Long,
                        samplesPerPixel : Int, bitsPerSample: Array[Int],
                        startOffset : Long, endOffset : Long,
-                       tiePoints : Array[Double], pixelScales : Array[Double], colourMode : String) {
+                       tiePoints : Array[Double], pixelScales : Array[Double], colourMode : String, planarConfiguration : Int) {
 
   lazy val bytesPerSample = bitsPerSample.map(b => (b + 7) / 8)
 
@@ -21,7 +21,8 @@ case class GeoTiffMeta(width : Long, height : Long,
       " samplesPerPixel=" + samplesPerPixel + " bitsPerSample=[" + bitsPerSample.mkString(", ") +
     "] startOffset=" + startOffset + " endOffset=" + endOffset +
       " tiePoints=[" + (if (tiePoints == null || tiePoints.isEmpty) { "" } else { tiePoints.mkString(", ") }) +
-      "] pixelScales=[" + (if (pixelScales == null || pixelScales.isEmpty) { "" } else { pixelScales.mkString(", ") }) + "] colourMode=" + colourMode + " )"
+      "] pixelScales=[" + (if (pixelScales == null || pixelScales.isEmpty) { "" } else { pixelScales.mkString(", ") }) +
+      "] colourMode=" + colourMode + " planarConfiguration=" + planarConfiguration +")"
   }
 }
 
@@ -34,7 +35,7 @@ object GeoTiffMeta {
       geoMeta.getSamplesPerPixel, geoMeta.getBitsPerSample,
       geoMeta.getFirstStripOffset, geoMeta.getEndOffset,
       geoMeta.getModelTiePoints, geoMeta.getModelPixelScales,
-      geoMeta.getPhotometricInterpretation)
+      geoMeta.getPhotometricInterpretation, geoMeta.getPlanarConfiguration)
   }
 
 

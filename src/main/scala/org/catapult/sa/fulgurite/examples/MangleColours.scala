@@ -16,15 +16,17 @@ object MangleColours extends Arguments {
 
     val (metaData, baseMeta) = GeoTiffMeta(opts("input"))
 
-    val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
+    val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc, 10)
       .map { case (i, d) =>
         i.band match {
           case 0 => i -> 255
+          case 1 => i -> 128
+          case 2 => i -> 0
           case _ => i -> d
         }
       }
 
-    GeoSparkUtils.saveGeoTiff(converted, metaData, baseMeta, opts("output"))
+    GeoSparkUtils.saveGeoTiff(converted, metaData, baseMeta, opts("output"), 10)
     SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), opts("output") + "/data.tif")
 
     sc.stop()
@@ -33,8 +35,8 @@ object MangleColours extends Arguments {
   override def allArgs(): List[Argument] = List("input", "output")
 
   override def defaultArgs(): Map[String, String] = Map(
-    "input" -> "c:/data/will/16April2016_Belfast_RGB_1.tif",
-    "output" -> ("c:/data/will/test_" + new Date().getTime.toString + ".tif")
+    "input" -> "c:/data/Will/tiny.tif",
+    "output" -> ("c:/data/Will/test_" + new Date().getTime.toString + ".tif")
   )
 
 }

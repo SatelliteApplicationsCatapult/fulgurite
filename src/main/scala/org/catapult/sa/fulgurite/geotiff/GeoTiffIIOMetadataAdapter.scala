@@ -38,9 +38,10 @@ THE SOFTWARE.
  *
  */
 
-import com.github.jaiimageio.plugins.tiff.GeoTIFFTagSet
+import com.github.jaiimageio.plugins.tiff.{BaselineTIFFTagSet, GeoTIFFTagSet}
 import javax.imageio.metadata.IIOMetadata
 import javax.imageio.metadata.IIOMetadataNode
+
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 
@@ -774,6 +775,14 @@ class GeoTiffIIOMetadataAdapter(val imageMetadata: IIOMetadata) {
       result = getTiffDoubles(modelTiePointNode)
     }
     result
+  }
+
+  def getPlanarConfiguration: Int = {
+    val r = getTiffField(BaselineTIFFTagSet.TAG_PLANAR_CONFIGURATION)
+    if (r != null) {
+      return getTiffShort(r, 0)
+    }
+    return 0
   }
 
   def getModelTransformation: Array[Double] = {

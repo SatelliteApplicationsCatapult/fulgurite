@@ -19,9 +19,9 @@ class GeoTiffBinaryRecordReader extends RecordReader[LongWritable, BytesWritable
   private var splitEnd: Long = 0L
   private var currentPosition: Long = 0L
   private var recordLength: Int = 0
-  private var fileInputStream: FSDataInputStream = null
-  private var recordKey: LongWritable = null
-  private var recordValue: BytesWritable = null
+  private var fileInputStream: FSDataInputStream = _
+  private var recordKey: LongWritable = _
+  private var recordValue: BytesWritable = _
 
   override def close() {
     if (fileInputStream != null) {
@@ -52,6 +52,12 @@ class GeoTiffBinaryRecordReader extends RecordReader[LongWritable, BytesWritable
     startOffset = GeoTiffBinaryInputFormat.getStartOffset(context)
     // the byte position this fileSplit starts at but offset with the start offset for the data in the file
     splitStart = fileSplit.getStart + startOffset
+
+    // if the start is after the end of the data section. Move it back to the end. This should mean that both the
+    // start and end of this split are at the end and nothing happens.
+    if (splitStart > GeoTiffBinaryInputFormat.getEndOffset(context)) {
+      splitStart = GeoTiffBinaryInputFormat.getEndOffset(context)
+    }
 
     // splitEnd byte marker that the fileSplit ends at
     splitEnd = splitStart + fileSplit.getLength
@@ -100,7 +106,6 @@ class GeoTiffBinaryRecordReader extends RecordReader[LongWritable, BytesWritable
       fileInputStream.readFully(buffer)
       // update our current position
       currentPosition = currentPosition + recordLength
-      // return true
       return true
     }
     false

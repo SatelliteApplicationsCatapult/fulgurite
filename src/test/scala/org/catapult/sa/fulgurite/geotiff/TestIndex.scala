@@ -36,7 +36,7 @@ class TestIndex {
 
   @Test
   def testCreate() : Unit = {
-    val result = Index.create(1, 11478, 11478 * 10782, 3)
+    val result = Index.createPlanar(1, 11478, 11478 * 10782, 3)
     assertEquals(1, result.x)
     assertEquals(0, result.y)
     assertEquals(0, result.band)
@@ -44,8 +44,41 @@ class TestIndex {
 
   @Test
   def testCreateSecondBand() : Unit = {
-    val result = Index.create((11478 * 10782) + 1, 11478, 11478 * 10782, 3)
+    val result = Index.createPlanar((11478 * 10782) + 1, 11478, 11478 * 10782, 3)
     assertEquals(1, result.x)
+    assertEquals(0, result.y)
+    assertEquals(1, result.band)
+  }
+
+  @Test
+  def testChunky1() : Unit = {
+    val result = Index.createChunky(1, 11, 11, 3)
+    assertEquals(0, result.x)
+    assertEquals(0, result.y)
+    assertEquals(1, result.band)
+  }
+
+  @Test
+  def testChunky2() : Unit = {
+    val result = Index.createChunky(5, 11, 11, 3)
+    assertEquals(2, result.band)
+    assertEquals(1, result.x)
+    assertEquals(0, result.y)
+
+  }
+
+  @Test
+  def testChunky3() : Unit = {
+    val result = Index.createChunky(15, 11, 11, 3)
+    assertEquals(5, result.x)
+    assertEquals(0, result.y)
+    assertEquals(0, result.band)
+  }
+
+  @Test
+  def testChunky4() : Unit = {
+    val result = Index.createChunky(10, 11, 11, 3)
+    assertEquals(3, result.x)
     assertEquals(0, result.y)
     assertEquals(1, result.band)
   }

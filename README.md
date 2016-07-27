@@ -42,7 +42,13 @@ if you don't tell us about it. Pull requests with new features or bug fixes are 
 there are test cases (We don't want the test debt to get worse) and that the code is formatted similar to existing code.
 New use cases or feature requests are also welcome.
 
-Above all else, keep things civil please.
+Above all else, keep things civil.
+
+Please see TODO.md for a current list of features we want to implement. The bug list is a good place to find things that 
+need fixing. If there is some thing that we think is easy to fix but we don't have time to deal with we will tag it.
+
+If you are trying to fix something and have any questions please get in contact we will be happy to try and explain 
+things if we can.
 
 ## License
 This project is licensed under the LGPL3.
