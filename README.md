@@ -30,7 +30,7 @@ Currently this project is not in Maven. We will be working on that soon. Build a
   <dependency>
     <groupId>org.catapult.sa</groupId>
     <artifactId>fulgurite</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1-SNAPSHOT</version>
   </dependency>
 ```
 
