@@ -44,7 +44,6 @@ object GeoTiffToASC extends Arguments {
     generateHeader(metaData, opts("output") + "/header.txt")
     SparkUtils.joinOutputFiles(opts("output") + "/header.txt", opts("output"), opts("output") + "/output.asc")
     sc.stop()
-    // TODO: use SparkUtils.deleteAllExcept to clean up.
   }
 
   override def allArgs(): List[Argument] = List("input", "output", "band")

@@ -12,7 +12,7 @@ object Histogram extends Arguments {
     val opts = processArgs(args)
     val conf = SparkUtils.createConfig("Example-histogram", "local[2]")
     val sc = SparkContext.getOrCreate(conf)
-    val (metaData, baseMeta) = GeoTiffMeta(opts("input"))
+    val (metaData, _) = GeoTiffMeta(opts("input"))
 
     GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
         .map { case (i, d) => (i.band -> d) -> 1 }

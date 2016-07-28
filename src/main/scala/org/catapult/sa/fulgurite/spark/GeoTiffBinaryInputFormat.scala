@@ -6,7 +6,6 @@ import org.apache.hadoop.mapreduce.{InputSplit, JobContext, RecordReader, TaskAt
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat
 import org.apache.spark.Logging
 import org.apache.spark.deploy.SparkHadoopUtil
-import org.apache.spark.input.FixedLengthBinaryRecordReader
 
 
 object GeoTiffBinaryInputFormat {

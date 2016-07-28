@@ -1,14 +1,13 @@
 package org.catapult.sa.fulgurite.integration
 
 import java.io.{File, FileInputStream}
-import java.nio.file.{Files, Paths}
 
 import org.apache.commons.io.{FileUtils, IOUtils}
 import org.apache.spark.SparkContext
 import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
 import org.catapult.sa.fulgurite.spark.{GeoSparkUtils, SparkUtils}
-import org.junit.Test
 import org.junit.Assert._
+import org.junit.Test
 
 import scala.util.Random
 

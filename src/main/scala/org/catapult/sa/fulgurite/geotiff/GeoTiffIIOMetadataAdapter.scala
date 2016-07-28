@@ -38,12 +38,10 @@ THE SOFTWARE.
  *
  */
 
-import com.github.jaiimageio.plugins.tiff.{BaselineTIFFTagSet, GeoTIFFTagSet}
-import javax.imageio.metadata.IIOMetadata
-import javax.imageio.metadata.IIOMetadataNode
+import javax.imageio.metadata.{IIOMetadata, IIOMetadataNode}
 
-import org.w3c.dom.Node
-import org.w3c.dom.NodeList
+import com.github.jaiimageio.plugins.tiff.{BaselineTIFFTagSet, GeoTIFFTagSet}
+import org.w3c.dom.{Node, NodeList}
 
 /**
   * Modified and converted to scala Wil Selwood 2016
