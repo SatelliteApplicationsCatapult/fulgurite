@@ -1,5 +1,8 @@
 # Fulgurite
 
+[![Build Status](https://travis-ci.org/SatelliteApplicationsCatapult/fulgurite.svg?branch=master)](https://travis-ci.org/SatelliteApplicationsCatapult/fulgurite)
+[![License](https://img.shields.io/badge/licence-LGPLv3-green.svg?style=flat)](https://github.com/SatelliteApplicationsCatapult/fulgurite/blob/master/LICENSE.txt)
+
 Fulgurite is a way to use Apache Spark to process GeoTIF images in a distributed way.
 
 [Fulgurite](https://en.wikipedia.org/wiki/Fulgurite) is also the name for a rock formed by a lightning strike with the
