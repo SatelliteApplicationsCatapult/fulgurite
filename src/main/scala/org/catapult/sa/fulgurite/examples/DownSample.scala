@@ -28,7 +28,10 @@ object DownSample extends Arguments {
         .aggregateByKey(0 -> 0, 1000)(SparkUtils.average, SparkUtils.averageSum)
         .map(SparkUtils.finalAverage)
 
-    val newMeta = GeoTiffMeta(metaData.width / sampleSize, metaData.height / sampleSize, metaData.samplesPerPixel, metaData.bitsPerSample, 0, 0, metaData.tiePoints, metaData.pixelScales.map(_ * sampleSize), metaData.colourMode, metaData.planarConfiguration)
+    val newMeta = GeoTiffMeta(metaData)
+    newMeta.width = metaData.width / sampleSize
+    newMeta.height = metaData.height / sampleSize
+    newMeta.pixelScales = metaData.pixelScales.map(_ * sampleSize)
 
     GeoSparkUtils.saveGeoTiff(converted, newMeta, rawMeta, opts("output"))
 

@@ -1,5 +1,7 @@
 package org.catapult.sa.fulgurite.geotiff
 
+import com.vividsolutions.jts.geom.{Coordinate, GeometryFactory, Point}
+
 /**
   * Index contains the location in the image of a pixel
   */
@@ -9,6 +11,13 @@ case class Index(x : Long, y : Long, band : Int) {
     val newY = this.y / size
     Index(newX, newY, this.band)
   }
+
+  def toCoordinate = new Coordinate(x, y)
+
+  def toPoint(geoFactory : GeometryFactory) : Point = {
+    geoFactory.createPoint(this.toCoordinate)
+  }
+
 }
 
 object Index {

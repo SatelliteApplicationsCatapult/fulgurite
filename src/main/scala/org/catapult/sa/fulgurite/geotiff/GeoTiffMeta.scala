@@ -9,12 +9,17 @@ import javax.imageio.metadata.IIOMetadata
   *
   * TODO: Create more stuff in here.
   */
-case class GeoTiffMeta(width : Long, height : Long,
-                       samplesPerPixel : Int, bitsPerSample: Array[Int],
-                       startOffset : Long, endOffset : Long,
-                       tiePoints : Array[Double], pixelScales : Array[Double], colourMode : String, planarConfiguration : Int) {
+case class GeoTiffMeta(var width : Long, var height : Long,
+                       var samplesPerPixel : Int, var bitsPerSample: Array[Int],
+                       var startOffset : Long, var endOffset : Long,
+                       var tiePoints : Array[Double],
+                       var pixelScales : Array[Double],
+                       var colourMode : String,
+                       var planarConfiguration : Int,
+                       var extraSamples : Array[Int],
+                       var sampleFormat : Array[Int]) {
 
-  lazy val bytesPerSample = bitsPerSample.map(b => (b + 7) / 8)
+  def bytesPerSample = bitsPerSample.map(b => (b + 7) / 8)
 
   override def toString : String = {
     "GeoTiffMeta(width=" + width + " height=" + height +
@@ -22,7 +27,8 @@ case class GeoTiffMeta(width : Long, height : Long,
     "] startOffset=" + startOffset + " endOffset=" + endOffset +
       " tiePoints=[" + (if (tiePoints == null || tiePoints.isEmpty) { "" } else { tiePoints.mkString(", ") }) +
       "] pixelScales=[" + (if (pixelScales == null || pixelScales.isEmpty) { "" } else { pixelScales.mkString(", ") }) +
-      "] colourMode=" + colourMode + " planarConfiguration=" + planarConfiguration +")"
+      "] colourMode=" + colourMode + " planarConfiguration=" + planarConfiguration +
+      " extraSamples=[" + extraSamples.mkString(", ") + "] sampleFormat=[" + sampleFormat.mkString(", ") + "])"
   }
 }
 
@@ -35,9 +41,18 @@ object GeoTiffMeta {
       geoMeta.getSamplesPerPixel, geoMeta.getBitsPerSample,
       geoMeta.getFirstStripOffset, geoMeta.getEndOffset,
       geoMeta.getModelTiePoints, geoMeta.getModelPixelScales,
-      geoMeta.getPhotometricInterpretation, geoMeta.getPlanarConfiguration)
+      geoMeta.getPhotometricInterpretation, geoMeta.getPlanarConfiguration,
+      geoMeta.getExtraSamples, geoMeta.getSampleFormat)
   }
 
+  def apply(old : GeoTiffMeta) : GeoTiffMeta = GeoTiffMeta(
+    old.width, old.height,
+    old.samplesPerPixel, old.bitsPerSample,
+    old.startOffset, old.endOffset,
+    old.tiePoints, old.pixelScales,
+    old.colourMode, old.planarConfiguration,
+    old.extraSamples, old.sampleFormat
+  )
 
   def apply(file : File) : (GeoTiffMeta, IIOMetadata) = {
     if (file == null || !file.canRead || !file.isFile) {

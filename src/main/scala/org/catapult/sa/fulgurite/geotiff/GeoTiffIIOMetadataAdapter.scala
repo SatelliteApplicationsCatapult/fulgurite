@@ -730,6 +730,27 @@ class GeoTiffIIOMetadataAdapter(val imageMetadata: IIOMetadata) {
     null
   }
 
+
+  def getExtraSamples : Array[Int] = {
+    val field = getTiffField(BaselineTIFFTagSet.TAG_EXTRA_SAMPLES)
+    if (field != null) {
+      getTiffShorts(field)
+    }
+    else {
+      Array.empty[Int]
+    }
+  }
+
+  def getSampleFormat : Array[Int] = {
+    val field = getTiffField(BaselineTIFFTagSet.TAG_SAMPLE_FORMAT)
+    if (field != null) {
+      getTiffShorts(field)
+    }
+    else {
+      Array.empty[Int]
+    }
+  }
+
   def getGeoKeyRecord(keyID: Int): GeoKeyRecord = {
     val geoKeyDir: IIOMetadataNode = getTiffField(GeoTIFFTagSet.TAG_GEO_KEY_DIRECTORY)
     if (geoKeyDir == null) {
@@ -780,7 +801,7 @@ class GeoTiffIIOMetadataAdapter(val imageMetadata: IIOMetadata) {
     if (r != null) {
       return getTiffShort(r, 0)
     }
-    return 0
+    0
   }
 
   def getModelTransformation: Array[Double] = {
