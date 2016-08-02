@@ -3,6 +3,7 @@ package org.catapult.sa.fulgurite.examples
 import java.io.{FileOutputStream, PrintStream}
 import java.util.Date
 
+import org.apache.commons.io.FileUtils
 import org.apache.spark.SparkContext
 import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
 import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils, SparkUtils}
@@ -28,7 +29,7 @@ object GeoTiffToASC extends Arguments {
     implicit val indexOrder = Index.orderingByBandOutput
 
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
-        .filter { case (i, d) => i.band == targetBand }
+        .filter { case (i, d) => i.band == targetBand } // only pull out the band we are interested in.
         .sortByKey()
         .map { case(i, d) =>
           if (i.x == 0 && i.y == 0) {
@@ -44,14 +45,14 @@ object GeoTiffToASC extends Arguments {
     generateHeader(metaData, opts("output") + "/header.txt")
     SparkUtils.joinOutputFiles(opts("output") + "/header.txt", opts("output"), opts("output") + "/output.asc")
     sc.stop()
+
+    println(opts("output")) // Print where the output directory was so its easier to find it.
   }
 
-  override def allArgs(): List[Argument] = List("input", "output", "band")
-
-  override def defaultArgs(): Map[String, String] = Map(
-    "input" -> "c:/data/will/16April2016_Belfast_RGB_1.tif",
-    "output" -> ("c:/data/will/test_" + new Date().getTime.toString + ".asc"),
-    "band" -> "0"
+  override def allowedArgs() = List(
+    Argument("input", "src/test/resources/tiny.tif"),
+    Argument("output", FileUtils.getTempDirectoryPath + "/test_" + new Date().getTime.toString + ".asc"),
+    Argument("band", "0")
   )
 
   private def generateHeader(meta : GeoTiffMeta, target : String): Unit = {

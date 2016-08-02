@@ -5,12 +5,11 @@ package org.catapult.sa.fulgurite.spark
   */
 trait Arguments {
 
-  def defaultArgs(): Map[String, String]
-  def allArgs() : List[Argument]
+  def allowedArgs() : List[Argument]
 
-  private lazy val allowed = allArgs().map(a => a.name -> a).toMap
+  private lazy val allowed = allowedArgs().map(a => a.name -> a).toMap
 
-  def processArgs(args : Array[String], da : Map[String, String] = defaultArgs()) : Map[String, String] = {
+  def processArgs(args : Array[String]) : Map[String, String] = {
 
     def loop(a : List[String], result : Map[String, String]) : Map[String, String] = {
       a match {
@@ -31,13 +30,9 @@ trait Arguments {
       }
     }
 
-    loop(args.toList, da)
+    loop(args.toList, allowed.map(e => e._1 -> e._2.defaultValue))
   }
 
 }
 
-case class Argument(name : String, flag : Boolean = false)
-
-object Argument {
-  implicit def stringWrapper(s : String) : Argument = Argument(s)
-}
+case class Argument(name : String, defaultValue : String = "", flag : Boolean = false)

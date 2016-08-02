@@ -11,7 +11,7 @@ object MangleColours extends Arguments {
   def main(args : Array[String]) : Unit = {
 
     val opts = processArgs(args)
-    val conf = SparkUtils.createConfig("Example-Red", "local[2]")
+    val conf = SparkUtils.createConfig("Example-Orange", "local[2]")
     val sc = SparkContext.getOrCreate(conf)
 
     val (metaData, baseMeta) = GeoTiffMeta(opts("input"))
@@ -30,13 +30,12 @@ object MangleColours extends Arguments {
     SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), opts("output") + "/data.tif")
 
     sc.stop()
+    println(opts("output"))
   }
 
-  override def allArgs(): List[Argument] = List("input", "output")
-
-  override def defaultArgs(): Map[String, String] = Map(
-    "input" -> "c:/data/Will/tiny.tif",
-    "output" -> ("c:/data/Will/test_" + new Date().getTime.toString + ".tif")
+  override def allowedArgs() = List(
+    Argument("input", "src/test/resources/tiny.tif"),
+    Argument("output", System.getProperty("java.io.tmpdir") + "/test_" + new Date().getTime.toString + ".tif")
   )
 
 }

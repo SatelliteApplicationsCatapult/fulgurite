@@ -23,6 +23,5 @@ object Histogram extends Arguments {
     sc.stop()
   }
 
-  override def allArgs(): List[Argument] = List("input")
-  override def defaultArgs(): Map[String, String] = Map("input" -> "c:/data/will/16April2016_Belfast_RGB_1.tif")
+  override def allowedArgs() = List(Argument("input", "src/test/resources/tiny.tif"))
 }
