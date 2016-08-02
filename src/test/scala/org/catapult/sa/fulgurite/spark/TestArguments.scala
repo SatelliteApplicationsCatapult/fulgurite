@@ -6,8 +6,7 @@ import org.junit.Assert._
 class TestArguments {
 
   class ArgTest extends Arguments {
-    override def defaultArgs(): Map[String, String] = Map("argWibble" -> "foo", "testArg" -> "fish")
-    override def allArgs(): List[Argument] = List("testArg", "argWibble")
+    override def allowedArgs(): List[Argument] = List(Argument("argWibble", "foo"), Argument("testArg", "fish"))
   }
 
   @Test
@@ -36,8 +35,7 @@ class TestArguments {
   @Test
   def testFlags() : Unit = {
     class FlagTest extends Arguments {
-      override def defaultArgs(): Map[String, String] = Map("fish" -> "ardvark")
-      override def allArgs(): List[Argument] = List(Argument("fish", flag = true))
+      override def allowedArgs(): List[Argument] = List(Argument("fish", "aardvark", flag = true))
     }
 
     val uut = new FlagTest()

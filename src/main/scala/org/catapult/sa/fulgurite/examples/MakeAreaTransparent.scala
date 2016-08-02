@@ -4,6 +4,7 @@ import java.util.Date
 
 import com.github.jaiimageio.plugins.tiff.BaselineTIFFTagSet
 import com.vividsolutions.jts.geom.{Coordinate, GeometryFactory, Polygon, PrecisionModel}
+import org.apache.commons.io.FileUtils
 import org.apache.spark.SparkContext
 import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
 import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils, SparkUtils}
@@ -24,7 +25,7 @@ object MakeAreaTransparent extends Arguments {
 
     val area = parseShape(opts("shape"))
 
-    val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc, 100000)
+    val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc, 10)
         .flatMap { case (index, value) => // for each
           val transparentIndex = Index(index.x, index.y, targetBand)
           val point = index.toPoint(geoFactory)
@@ -53,14 +54,14 @@ object MakeAreaTransparent extends Arguments {
     SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), opts("output") + "/data.tif")
 
     sc.stop()
+
+    println(opts("output"))
   }
 
-  override def allArgs(): List[Argument] = List("input", "output", "shape")
-
-  override def defaultArgs(): Map[String, String] = Map(
-    "input" -> "c:/data/Will/16April2016_Belfast_RGB_1.tif",
-    "output" -> ("c:/data/Will/test_" + new Date().getTime.toString + ".tif"),
-    "shape" -> "500:0,11476:904,10027:10780,0:9849,500:0"
+  override def allowedArgs() = List(
+    Argument("input", "src/test/resources/tiny.tif"),
+    Argument("output", FileUtils.getTempDirectoryPath + "/test_" + new Date().getTime.toString + ".tif"),
+    Argument("shape", "5:0,11:5,5:11,0:5,5:0")
   )
 
   private def parseShape(input : String) : Polygon = {

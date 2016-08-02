@@ -10,11 +10,8 @@ import org.w3c.dom.Node
   * Extract the meta data from a GeoTiff and output it as an XML file
   */
 object ExtractMetadata extends Arguments {
-  override def defaultArgs(): Map[String, String] = Map(
-    "in" -> "C:/data/OUREA_SiteB_24102915_WV_processedImg-cropped.tif"
-  )
 
-  override def allArgs(): List[Argument] = List("in")
+  override def allowedArgs() = List(Argument("in", "src/test/resources/tiny.tif"))
 
   def main(args : Array[String]) : Unit = {
     val opts = processArgs(args)
