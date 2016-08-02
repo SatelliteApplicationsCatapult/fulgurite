@@ -123,12 +123,18 @@ object GeoSparkUtils {
       rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS)
       rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS), TIFFTag.TIFF_LONG, numRows))
 
+      // Optional fields, when we don't have any data they should not be provided.
       if (meta.extraSamples.isEmpty) {
         rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_EXTRA_SAMPLES)
       } else {
         rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_EXTRA_SAMPLES), TIFFTag.TIFF_SHORT, meta.extraSamples.length, meta.extraSamples.map(_.toChar)))
       }
-      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_SAMPLE_FORMAT), TIFFTag.TIFF_SHORT, meta.sampleFormat.length, meta.sampleFormat.map(_.toChar)))
+
+      if (meta.sampleFormat.isEmpty) {
+        rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_SAMPLE_FORMAT)
+      } else {
+        rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_SAMPLE_FORMAT), TIFFTag.TIFF_SHORT, meta.sampleFormat.length, meta.sampleFormat.map(_.toChar)))
+      }
 
       // Write the IFD
       rootIFD.writeToStream(ios)
