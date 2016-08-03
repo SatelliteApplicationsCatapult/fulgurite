@@ -1,6 +1,5 @@
 package org.catapult.sa.fulgurite.examples
 
-import org.apache.spark.SparkContext
 import org.catapult.sa.fulgurite.geotiff.GeoTiffMeta
 import org.catapult.sa.fulgurite.spark.{Arguments, GeoSparkUtils}
 

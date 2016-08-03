@@ -34,6 +34,7 @@ class GeoTiffMetaHelper(baseMeta : IIOMetadata) {
   def xResolution = getRationalField(BaselineTIFFTagSet.TAG_X_RESOLUTION)
   def yResolution = getRationalField(BaselineTIFFTagSet.TAG_Y_RESOLUTION)
   def compression = getIntField(BaselineTIFFTagSet.TAG_COMPRESSION)
+  def geoKeyDirectory = getIntsField(GeoTIFFTagSet.TAG_GEO_KEY_DIRECTORY)
 
   private def getIntField(field : Int, offset : Int = 0) = baseGet(field, -1, _.getAsInt(offset))
   private def getIntsField(field : Int) = baseGet(field, Array.empty[Int], _.getAsInts())
@@ -85,6 +86,8 @@ object GeoTiffMetaHelper {
 
     setInt(rootIFD, BaselineTIFFTagSet.TAG_COMPRESSION, meta.compression)
 
+    setGeoShorts(rootIFD, GeoTIFFTagSet.TAG_GEO_KEY_DIRECTORY, meta.geoKeyDirectory.map(_.toChar))
+
     // Optional fields, when we don't have any data they should not be provided.
     if (meta.extraSamples.isEmpty) {
       rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_EXTRA_SAMPLES)
@@ -113,6 +116,10 @@ object GeoTiffMetaHelper {
 
   private def setShorts(rootIFD : TIFFIFD, field : Int, value : Array[Char]) =
     rootIFD.addTIFFField(new TIFFField(base.getTag(field), TIFFTag.TIFF_SHORT, value.length, value))
+
+  private def setGeoShorts(rootIFD : TIFFIFD, field : Int, value : Array[Char]) =
+    rootIFD.addTIFFField(new TIFFField(geoTiffBase.getTag(field), TIFFTag.TIFF_SHORT, value.length, value))
+
   private def setGeoDoubles(rootIFD : TIFFIFD, field : Int, value : Array[Double]) =
     rootIFD.addTIFFField(new TIFFField(geoTiffBase.getTag(field), TIFFTag.TIFF_DOUBLE, value.length, value))
 
