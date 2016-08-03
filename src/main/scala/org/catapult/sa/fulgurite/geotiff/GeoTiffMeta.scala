@@ -18,7 +18,8 @@ case class GeoTiffMeta(var width : Long, var height : Long,
                        var sampleFormat : Array[Int],
                        var geoAsciiParams : String,
                        var xResolution : Array[Long], var yResolution : Array[Long],
-                       var compression: Int) {
+                       var compression: Int,
+                       var geoKeyDirectory : Array[Int]) {
 
   def bytesPerSample = bitsPerSample.map(b => (b + 7) / 8)
 
@@ -39,7 +40,8 @@ object GeoTiffMeta {
       geoMeta.extraSamples, geoMeta.sampleFormats,
       geoMeta.geoAsciiParams,
       geoMeta.xResolution, geoMeta.yResolution,
-      geoMeta.compression
+      geoMeta.compression,
+      geoMeta.geoKeyDirectory.map(_.toInt)
     )
 
   }
@@ -53,7 +55,8 @@ object GeoTiffMeta {
     old.extraSamples, old.sampleFormat,
     old.geoAsciiParams,
     old.xResolution, old.yResolution,
-    old.compression
+    old.compression,
+    old.geoKeyDirectory
   )
 
   def apply(file : File) : GeoTiffMeta = {
