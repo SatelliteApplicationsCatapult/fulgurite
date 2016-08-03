@@ -1,13 +1,9 @@
 package org.catapult.sa.fulgurite.examples
 
-import java.util.Date
-
 import com.github.jaiimageio.plugins.tiff.BaselineTIFFTagSet
 import com.vividsolutions.jts.geom.{Coordinate, GeometryFactory, Polygon, PrecisionModel}
-import org.apache.commons.io.FileUtils
-import org.apache.spark.SparkContext
 import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
-import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils, SparkUtils}
+import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils}
 
 /**
   * Code to add a transparent layer and make part of the image transparent.
@@ -16,13 +12,10 @@ object MakeAreaTransparent extends Arguments {
 
   def main(args : Array[String]) : Unit = {
     val opts = processArgs(args)
-    val conf = SparkUtils.createConfig("Example-Transparent", "local[4]")
-    val sc = SparkContext.getOrCreate(conf)
+    val sc = getSparkContext("Example-Transparent", "local[4]")
 
-    val (metaData, baseMeta) = GeoTiffMeta(opts("input"))
-
-    val targetBand =  metaData.samplesPerPixel
-
+    val metaData = GeoTiffMeta(opts("input"))
+    val targetBand = metaData.samplesPerPixel
     val area = parseShape(opts("shape"))
 
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc, 10)
@@ -50,19 +43,15 @@ object MakeAreaTransparent extends Arguments {
     resultMeta.extraSamples  = (BaselineTIFFTagSet.EXTRA_SAMPLES_UNASSOCIATED_ALPHA :: metaData.extraSamples.toList).toArray  // the extra sample is a alpha channel
     resultMeta.sampleFormat  = (BaselineTIFFTagSet.SAMPLE_FORMAT_UNSIGNED_INTEGER :: metaData.sampleFormat.toList).toArray  // the extra sample is an unsigned int.
 
-    GeoSparkUtils.saveGeoTiff(converted, resultMeta, baseMeta, opts("output"))
-    SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), opts("output") + "/data.tif")
+    GeoSparkUtils.saveGeoTiff(converted, resultMeta, opts("output"))
+    GeoSparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), opts("output") + "/data.tif")
 
     sc.stop()
 
     println(opts("output"))
   }
 
-  override def allowedArgs() = List(
-    Argument("input", "src/test/resources/tiny.tif"),
-    Argument("output", FileUtils.getTempDirectoryPath + "/test_" + new Date().getTime.toString + ".tif"),
-    Argument("shape", "5:0,11:5,5:11,0:5,5:0")
-  )
+  override def allowedArgs() = Argument("shape", "5:0,11:5,5:11,0:5,5:0") :: InputOutputArguments
 
   private def parseShape(input : String) : Polygon = {
     geoFactory.createPolygon(input.split(",").map { i =>

@@ -1,12 +1,9 @@
 package org.catapult.sa.fulgurite.examples
 
 import java.io.{FileOutputStream, PrintStream}
-import java.util.Date
 
-import org.apache.commons.io.FileUtils
-import org.apache.spark.SparkContext
 import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
-import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils, SparkUtils}
+import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils}
 
 /**
   * Read a tiff and turn it into an ASC file
@@ -16,10 +13,9 @@ object GeoTiffToASC extends Arguments {
   def main(args : Array[String]) : Unit = {
 
     val opts = processArgs(args)
-    val conf = SparkUtils.createConfig("Example-Convert", "local[2]")
-    val sc = SparkContext.getOrCreate(conf)
+    val sc = getSparkContext("Example-Convert", "local[2]")
 
-    val (metaData, _) = GeoTiffMeta(opts("input"))
+    val metaData = GeoTiffMeta(opts("input"))
     val targetBand = opts("band").toInt
     if (metaData.samplesPerPixel <= targetBand) {
       throw new IllegalArgumentException("band must be less than the number of bands in the image.")
@@ -41,19 +37,16 @@ object GeoTiffToASC extends Arguments {
           }
         }
 
-    SparkUtils.saveRawTextFile(converted, opts("output"))
+    // save the result.
+    GeoSparkUtils.saveRawTextFile(converted, opts("output"))
     generateHeader(metaData, opts("output") + "/header.txt")
-    SparkUtils.joinOutputFiles(opts("output") + "/header.txt", opts("output"), opts("output") + "/output.asc")
+    GeoSparkUtils.joinOutputFiles(opts("output") + "/header.txt", opts("output"), opts("output") + "/output.asc")
     sc.stop()
 
     println(opts("output")) // Print where the output directory was so its easier to find it.
   }
 
-  override def allowedArgs() = List(
-    Argument("input", "src/test/resources/tiny.tif"),
-    Argument("output", FileUtils.getTempDirectoryPath + "/test_" + new Date().getTime.toString + ".asc"),
-    Argument("band", "0")
-  )
+  override def allowedArgs() = Argument("band", "0") :: InputOutputArguments
 
   private def generateHeader(meta : GeoTiffMeta, target : String): Unit = {
     val output = new PrintStream(new FileOutputStream(target))

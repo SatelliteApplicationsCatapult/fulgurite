@@ -1,8 +1,7 @@
 package org.catapult.sa.fulgurite.examples
 
-import org.apache.spark.SparkContext
 import org.catapult.sa.fulgurite.geotiff.GeoTiffMeta
-import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils, SparkUtils}
+import org.catapult.sa.fulgurite.spark.{Arguments, GeoSparkUtils}
 
 /**
   * generate a histogram from an image.
@@ -10,9 +9,8 @@ import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils, Spar
 object Histogram extends Arguments {
   def main(args : Array[String]) : Unit = {
     val opts = processArgs(args)
-    val conf = SparkUtils.createConfig("Example-histogram", "local[2]")
-    val sc = SparkContext.getOrCreate(conf)
-    val (metaData, _) = GeoTiffMeta(opts("input"))
+    val sc = getSparkContext("Example-histogram", "local[2]")
+    val metaData = GeoTiffMeta(opts("input"))
 
     GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
         .map { case (i, d) => (i.band -> d) -> 1 }
@@ -23,5 +21,5 @@ object Histogram extends Arguments {
     sc.stop()
   }
 
-  override def allowedArgs() = List(Argument("input", "src/test/resources/tiny.tif"))
+  override def allowedArgs() = List(InputArgument)
 }
