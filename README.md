@@ -64,7 +64,7 @@ If you are trying to fix something and have any questions please get in contact 
 things if we can.
 
 ## License
-This project is licensed under the LGPL3.
+This project is licensed under the [LGPL3](https://github.com/SatelliteApplicationsCatapult/fulgurite/blob/master/LICENSE.txt).
 
 ## Thanks
 Thanks to the [Apache Spark](https://github.com/apache/spark) project and [JAI](https://github.com/jai-imageio/jai-imageio-core) 
