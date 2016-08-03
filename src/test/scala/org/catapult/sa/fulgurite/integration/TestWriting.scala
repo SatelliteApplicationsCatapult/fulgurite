@@ -4,10 +4,8 @@ import java.io.{File, FileInputStream}
 
 import com.github.jaiimageio.plugins.tiff.BaselineTIFFTagSet
 import org.apache.commons.io.{FileUtils, IOUtils}
-import org.apache.spark.SparkContext
 import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
 import org.catapult.sa.fulgurite.spark.GeoSparkUtils
-import org.catapult.sa.fulgurite.examples._
 import org.junit.Assert._
 import org.junit.Test
 
@@ -24,8 +22,7 @@ class TestWriting {
     val outputName = FileUtils.getTempDirectoryPath + "/tmp" + Random.nextInt()
     new File(outputName).deleteOnExit()
 
-    val conf = createConfig("TestWriting", "local[2]")
-    val sc = SparkContext.getOrCreate(conf)
+    val sc = getSparkContext("TestWriting", "local[2]")
 
     val metaData = GeoTiffMeta("src/test/resources/data_chunked.tif")
 
@@ -49,8 +46,7 @@ class TestWriting {
     val outputName = FileUtils.getTempDirectoryPath + "/tmp" + Random.nextInt()
     new File(outputName).deleteOnExit()
 
-    val conf = createConfig("TestWriting", "local[2]")
-    val sc = SparkContext.getOrCreate(conf)
+    val sc = getSparkContext("TestWriting", "local[2]")
 
     val meta = GeoTiffMeta("src/test/resources/data_chunked.tif") // Blarg get hold of base meta.
 
@@ -82,8 +78,7 @@ class TestWriting {
     val outputName = FileUtils.getTempDirectoryPath + "/tmp" + Random.nextInt()
     new File(outputName).deleteOnExit()
 
-    val conf = createConfig("TestWriting", "local[2]")
-    val sc = SparkContext.getOrCreate(conf)
+    val sc = getSparkContext("TestWriting", "local[2]")
 
     val meta = GeoTiffMeta("src/test/resources/data_chunked.tif") // Blarg get hold of base meta.
 
