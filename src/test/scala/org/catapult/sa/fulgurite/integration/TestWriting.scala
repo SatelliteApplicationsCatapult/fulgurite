@@ -6,7 +6,8 @@ import com.github.jaiimageio.plugins.tiff.BaselineTIFFTagSet
 import org.apache.commons.io.{FileUtils, IOUtils}
 import org.apache.spark.SparkContext
 import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
-import org.catapult.sa.fulgurite.spark.{GeoSparkUtils, SparkUtils}
+import org.catapult.sa.fulgurite.spark.GeoSparkUtils
+import org.catapult.sa.fulgurite.examples._
 import org.junit.Assert._
 import org.junit.Test
 
@@ -23,16 +24,15 @@ class TestWriting {
     val outputName = FileUtils.getTempDirectoryPath + "/tmp" + Random.nextInt()
     new File(outputName).deleteOnExit()
 
-    val conf = SparkUtils.createConfig("TestWriting", "local[2]")
+    val conf = createConfig("TestWriting", "local[2]")
     val sc = SparkContext.getOrCreate(conf)
 
-    val (metaData, baseMeta) = GeoTiffMeta("src/test/resources/data_chunked.tif")
+    val metaData = GeoTiffMeta("src/test/resources/data_chunked.tif")
 
     val input = sc.parallelize((0 until 11).flatMap(y => (0 until 11).flatMap(x => List(Index(x, y, 0) -> 255, Index(x, y, 1) -> 128, Index(x, y, 2) -> 0))))
 
-    GeoSparkUtils.saveGeoTiff(input, metaData, baseMeta, outputName, 10)
-
-    SparkUtils.joinOutputFiles( outputName + "/header.tiff", outputName + "/", outputName + "/data.tif")
+    GeoSparkUtils.saveGeoTiff(input, metaData, outputName, 10)
+    GeoSparkUtils.joinOutputFiles( outputName + "/header.tiff", outputName + "/", outputName + "/data.tif")
 
     val result = new Array[Byte](4000)
     val expected = new Array[Byte](4000)
@@ -49,10 +49,10 @@ class TestWriting {
     val outputName = FileUtils.getTempDirectoryPath + "/tmp" + Random.nextInt()
     new File(outputName).deleteOnExit()
 
-    val conf = SparkUtils.createConfig("TestWriting", "local[2]")
+    val conf = createConfig("TestWriting", "local[2]")
     val sc = SparkContext.getOrCreate(conf)
 
-    val (meta, baseMeta) = GeoTiffMeta("src/test/resources/data_chunked.tif") // Blarg get hold of base meta.
+    val meta = GeoTiffMeta("src/test/resources/data_chunked.tif") // Blarg get hold of base meta.
 
     val metaData = GeoTiffMeta(meta)
     metaData.planarConfiguration = BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR
@@ -65,8 +65,8 @@ class TestWriting {
 
     val inputRDD = sc.parallelize(input)
 
-    GeoSparkUtils.saveGeoTiff(inputRDD, metaData, baseMeta, outputName, 10)
-    SparkUtils.joinOutputFiles( outputName + "/header.tiff", outputName + "/", outputName + "/data.tif")
+    GeoSparkUtils.saveGeoTiff(inputRDD, metaData, outputName, 10)
+    GeoSparkUtils.joinOutputFiles( outputName + "/header.tiff", outputName + "/", outputName + "/data.tif")
 
     val result = new Array[Byte](4000)
     val expected = new Array[Byte](4000)
@@ -82,10 +82,10 @@ class TestWriting {
     val outputName = FileUtils.getTempDirectoryPath + "/tmp" + Random.nextInt()
     new File(outputName).deleteOnExit()
 
-    val conf = SparkUtils.createConfig("TestWriting", "local[2]")
+    val conf = createConfig("TestWriting", "local[2]")
     val sc = SparkContext.getOrCreate(conf)
 
-    val (meta, baseMeta) = GeoTiffMeta("src/test/resources/data_chunked.tif") // Blarg get hold of base meta.
+    val meta = GeoTiffMeta("src/test/resources/data_chunked.tif") // Blarg get hold of base meta.
 
     val metaData = GeoTiffMeta(meta)
 
@@ -103,8 +103,8 @@ class TestWriting {
 
     val inputRDD = sc.parallelize(input)
 
-    GeoSparkUtils.saveGeoTiff(inputRDD, metaData, baseMeta, outputName, 10)
-    SparkUtils.joinOutputFiles( outputName + "/header.tiff", outputName + "/", outputName + "/data.tif")
+    GeoSparkUtils.saveGeoTiff(inputRDD, metaData, outputName, 10)
+    GeoSparkUtils.joinOutputFiles( outputName + "/header.tiff", outputName + "/", outputName + "/data.tif")
 
     val result = new Array[Byte](4000)
     val expected = new Array[Byte](4000)

@@ -3,7 +3,7 @@ package org.catapult.sa.fulgurite.examples
 import java.io.{File, IOException, PrintStream}
 import javax.imageio.ImageIO
 
-import org.catapult.sa.fulgurite.spark.{Argument, Arguments}
+import org.catapult.sa.fulgurite.spark.Arguments
 import org.w3c.dom.Node
 
 /**
@@ -11,7 +11,7 @@ import org.w3c.dom.Node
   */
 object ExtractMetadata extends Arguments {
 
-  override def allowedArgs() = List(Argument("in", "src/test/resources/tiny.tif"))
+  override def allowedArgs() = List(InputArgument)
 
   def main(args : Array[String]) : Unit = {
     val opts = processArgs(args)

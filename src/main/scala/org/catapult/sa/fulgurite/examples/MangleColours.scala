@@ -1,20 +1,17 @@
 package org.catapult.sa.fulgurite.examples
 
-import java.util.Date
-
 import org.apache.spark.SparkContext
 import org.catapult.sa.fulgurite.geotiff.GeoTiffMeta
-import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils, SparkUtils}
+import org.catapult.sa.fulgurite.spark.{Arguments, GeoSparkUtils}
 
 object MangleColours extends Arguments {
 
   def main(args : Array[String]) : Unit = {
 
     val opts = processArgs(args)
-    val conf = SparkUtils.createConfig("Example-Orange", "local[2]")
-    val sc = SparkContext.getOrCreate(conf)
+    val sc = getSparkContext("Example-Orange", "local[2]")
 
-    val (metaData, baseMeta) = GeoTiffMeta(opts("input"))
+    val metaData = GeoTiffMeta(opts("input"))
 
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc, 10)
       .map { case (i, d) =>
@@ -26,16 +23,13 @@ object MangleColours extends Arguments {
         }
       }
 
-    GeoSparkUtils.saveGeoTiff(converted, metaData, baseMeta, opts("output"), 10)
-    SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), opts("output") + "/data.tif")
+    GeoSparkUtils.saveGeoTiff(converted, metaData, opts("output"), 10)
+    GeoSparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), opts("output") + "/data.tif")
 
     sc.stop()
     println(opts("output"))
   }
 
-  override def allowedArgs() = List(
-    Argument("input", "src/test/resources/tiny.tif"),
-    Argument("output", System.getProperty("java.io.tmpdir") + "/test_" + new Date().getTime.toString + ".tif")
-  )
+  override def allowedArgs() = InputOutputArguments
 
 }

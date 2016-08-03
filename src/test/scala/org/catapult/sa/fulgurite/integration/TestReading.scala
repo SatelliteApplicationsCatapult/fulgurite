@@ -1,8 +1,9 @@
 package org.catapult.sa.fulgurite.integration
 
 import org.apache.spark.SparkContext
+import org.catapult.sa.fulgurite.examples._
 import org.catapult.sa.fulgurite.geotiff.GeoTiffMeta
-import org.catapult.sa.fulgurite.spark.{GeoSparkUtils, SparkUtils}
+import org.catapult.sa.fulgurite.spark.GeoSparkUtils
 import org.junit.Test
 import org.junit.Assert._
 
@@ -14,10 +15,10 @@ class TestReading {
   @Test
   def basicReadingTest(): Unit = {
 
-    val conf = SparkUtils.createConfig("basicReadingTest", "local[2]")
+    val conf = createConfig("basicReadingTest", "local[2]")
     val sc = SparkContext.getOrCreate(conf)
 
-    val (metaData, _) = GeoTiffMeta("src/test/resources/data_chunked.tif")
+    val metaData = GeoTiffMeta("src/test/resources/data_chunked.tif")
     val result = GeoSparkUtils.GeoTiffRDD("src/test/resources/data_chunked.tif", metaData, sc, 10 )
       .map(_._2)
       .collect()

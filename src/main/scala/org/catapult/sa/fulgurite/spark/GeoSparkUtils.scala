@@ -1,17 +1,14 @@
 package org.catapult.sa.fulgurite.spark
 
-import java.io.File
+import java.io._
 import javax.imageio.ImageIO
-import javax.imageio.metadata.IIOMetadata
 
-import com.github.jaiimageio.impl.plugins.tiff.TIFFImageMetadata
-import com.github.jaiimageio.plugins.tiff.{BaselineTIFFTagSet, GeoTIFFTagSet, TIFFField, TIFFTag}
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.io.{BytesWritable, LongWritable}
+import org.apache.hadoop.io.{BytesWritable, LongWritable, NullWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
+import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, GeoTiffMetaHelper, Index}
 
 /**
   * Utility functions for working with geo tiff files.
@@ -58,15 +55,12 @@ object GeoSparkUtils {
     *
     * NOTE: On windows this will require the HADOOP_HOME environment variable to be set to where the winutils.exe is.
     *
-    * TODO: Remove the need for the baseMeta
-    *
     * @param rdd data for the bands
     * @param meta metadata for the
-    * @param baseMeta original metadata to base the new metadata on.
     * @param path where to create the output.
     * @param numPartitions how many partitions to use when sorting and also how many output files get created.
     */
-  def saveGeoTiff(rdd : RDD[(Index,  Int)], meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String, numPartitions : Int = 1000) : Unit = {
+  def saveGeoTiff(rdd : RDD[(Index,  Int)], meta : GeoTiffMeta, path : String, numPartitions : Int = 1000) : Unit = {
     implicit val indexOrdering = meta.planarConfiguration match {
       case 1 => Index.orderingByPositionThenBand
       case 2 => Index.orderingByBandOutput
@@ -78,16 +72,32 @@ object GeoSparkUtils {
       .map { case (i, d) => new BytesWritable(Array.emptyByteArray) -> new BytesWritable(convertToBytes(i.band, d)) }
       .saveAsNewAPIHadoopFile(path, classOf[BytesWritable], classOf[BytesWritable], classOf[RawBinaryOutputFormat])
 
-    saveGeoTiffMetaData(meta, baseMeta, path)
+    saveGeoTiffMetaData(meta, path)
   }
 
-  def saveGeoTiffMetaData(meta : GeoTiffMeta, baseMeta: IIOMetadata, path : String) : Unit = {
+  /**
+    * Write the metadata for a GeoTIFF image to a file. This will only write the metadata but not any of the data.
+    *
+    * The path is to a directory. A file will be created inside called header.tiff  This will need to be joined up
+    * at the front of any data to create a complete file.
+    *
+    * NOTE: the same and unmodified metadata object must be used to write both the data and the header.
+    *
+    * @param meta the metadata to write out
+    * @param path where to write the metadata.
+    */
+  def saveGeoTiffMetaData(meta : GeoTiffMeta, path : String) : Unit = {
 
     val ios = ImageIO.createImageOutputStream(new File(path, "header.tiff"))
     val writers = ImageIO.getImageWritersByFormatName("tiff")
     if (writers.hasNext) {
+
+      val baseMeta = GeoTiffMetaHelper.createImageMetaData(meta)
+      val rootIFD = baseMeta.getRootIFD
+
       val writer = writers.next()
       writer.setOutput(ios)
+
       writer.prepareWriteSequence(baseMeta)
 
       var headerNext = ios.getStreamPosition
@@ -99,42 +109,6 @@ object GeoSparkUtils {
 
       // Write the pointer to the first IFD after the header.
       ios.writeInt(headerNext.toInt)
-
-      val rootIFD = baseMeta.asInstanceOf[TIFFImageMetadata].getRootIFD
-
-      // update the ifd and make sure it matches the meta object.
-      val base = BaselineTIFFTagSet.getInstance
-      val geoTiffBase = GeoTIFFTagSet.getInstance
-      val numRows = meta.height.asInstanceOf[Int] * meta.samplesPerPixel
-      //val numColumns = meta.width * meta.bytesPerSample.sum
-      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_IMAGE_WIDTH), meta.width.toInt))
-      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_IMAGE_LENGTH), meta.height.toInt))
-
-      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_SAMPLES_PER_PIXEL), meta.samplesPerPixel))
-      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_BITS_PER_SAMPLE), TIFFTag.TIFF_SHORT, meta.samplesPerPixel, meta.bitsPerSample.map(_.toChar)))
-      rootIFD.addTIFFField(new TIFFField(geoTiffBase.getTag(GeoTIFFTagSet.TAG_MODEL_PIXEL_SCALE), TIFFTag.TIFF_DOUBLE,  meta.pixelScales.length, meta.pixelScales))
-
-      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_PLANAR_CONFIGURATION), meta.planarConfiguration))
-
-      // given we have just updated the size we should also update the number of offset and byte count places to be filled in later
-      rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_OFFSETS)
-      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_STRIP_OFFSETS), TIFFTag.TIFF_LONG, numRows))
-
-      rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS)
-      rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS), TIFFTag.TIFF_LONG, numRows))
-
-      // Optional fields, when we don't have any data they should not be provided.
-      if (meta.extraSamples.isEmpty) {
-        rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_EXTRA_SAMPLES)
-      } else {
-        rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_EXTRA_SAMPLES), TIFFTag.TIFF_SHORT, meta.extraSamples.length, meta.extraSamples.map(_.toChar)))
-      }
-
-      if (meta.sampleFormat.isEmpty) {
-        rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_SAMPLE_FORMAT)
-      } else {
-        rootIFD.addTIFFField(new TIFFField(base.getTag(BaselineTIFFTagSet.TAG_SAMPLE_FORMAT), TIFFTag.TIFF_SHORT, meta.sampleFormat.length, meta.sampleFormat.map(_.toChar)))
-      }
 
       // Write the IFD
       rootIFD.writeToStream(ios)
@@ -166,6 +140,47 @@ object GeoSparkUtils {
 
       ios.close()
     }
+  }
+
+  def saveRawTextFile(rdd : RDD[String], fileName : String) : Unit = {
+    rdd.map(e => NullWritable.get() -> new Text(e))
+      .saveAsNewAPIHadoopFile(fileName, classOf[NullWritable], classOf[Text], classOf[RawTextOutputFormat])
+  }
+
+  def joinOutputFiles(headerPath: String, path: String, outputName: String, prefix: String = "part-"): Unit = {
+    val dir = new File(path)
+    if (! dir.isDirectory) {
+      throw new IOException("Path is not a directory")
+    }
+
+    joinFiles(outputName+".tmp", dir.listFiles().filter(f => f.getName.startsWith(prefix)).sortBy(_.getName).toList:_*)
+    joinFiles(outputName, List(new File(headerPath), new File(outputName + ".tmp")):_*)
+  }
+
+  def joinFiles(outputPath : String, files : File*) : Unit = {
+    val output = new File(outputPath)
+    if (output.exists()) {
+      throw new IOException("Output path already exists")
+    }
+
+    val outputStream = new FileOutputStream(output)
+    val buffer = new Array[Byte](2048)
+    files.foreach(f => {
+      val inputStream = new BufferedInputStream(new FileInputStream(f))
+
+      var count = 0
+      do {
+        count = inputStream.read(buffer, 0, 2048)
+        if (count >= 0) {
+          outputStream.write(buffer, 0, count)
+        }
+      } while (count >= 0)
+
+      inputStream.close()
+    })
+
+    outputStream.flush()
+    outputStream.close()
   }
 
   private def createKeyValue(meta : GeoTiffMeta) : ((LongWritable, BytesWritable)) => (Index, Int) = {

@@ -1,11 +1,7 @@
 package org.catapult.sa.fulgurite.examples
 
-import java.util.Date
-
-import org.apache.commons.io.FileUtils
-import org.apache.spark.SparkContext
 import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
-import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils, SparkUtils}
+import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils}
 
 /**
   * Example program to stitch two GeoTiff images together.
@@ -17,15 +13,14 @@ object JoinTwoImages extends Arguments  {
 
     // Create spark context and process arguments
     val opts = processArgs(args)
-    val conf = SparkUtils.createConfig("Example-Transparent", "local[3]")
-    val sc = SparkContext.getOrCreate(conf)
+    val sc = getSparkContext("Example-Transparent", "local[3]")
 
     // get the metadata for the input images
-    val (metaData1, baseMeta1) = GeoTiffMeta(opts("input1"))
-    val (metaData2, _) = GeoTiffMeta(opts("input2"))
+    val metaData1 = GeoTiffMeta(opts("input1"))
+    val metaData2 = GeoTiffMeta(opts("input2"))
 
     // read the first one NOTE: you will need to change the partition size for your images.
-    // this is something that will need tuing for your images and cluster
+    // this is something that will need changing for your images and cluster
     val image1 = GeoSparkUtils.GeoTiffRDD(opts("input1"), metaData1, sc, 10)
 
     // offset the second image by the width of the first so it ends up on the right of the original
@@ -58,19 +53,18 @@ object JoinTwoImages extends Arguments  {
     // NOTE: if we were placing the new image on the left of the first one we would have to update the tie points here.
 
     // write the result
-    GeoSparkUtils.saveGeoTiff(result, resultMeta, baseMeta1, opts("output"))
-    SparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), opts("output") + "/data.tif")
+    GeoSparkUtils.saveGeoTiff(result, resultMeta, opts("output"))
+    GeoSparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), opts("output") + "/data.tif")
 
     // we are now finished with the spark context so stop it.
     sc.stop()
 
     println(opts("output"))
-
   }
 
   override def allowedArgs() = List(
     Argument("input1", "src/test/resources/tiny.tif"),
     Argument("input2", "src/test/resources/tiny.tif"),
-    Argument("output", FileUtils.getTempDirectoryPath + "/test_" + new Date().getTime.toString + ".tif")
+    OutputArgument
   )
 }
