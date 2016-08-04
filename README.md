@@ -3,20 +3,20 @@
 [![Build Status](https://travis-ci.org/SatelliteApplicationsCatapult/fulgurite.svg?branch=master)](https://travis-ci.org/SatelliteApplicationsCatapult/fulgurite)
 [![License](https://img.shields.io/badge/licence-LGPLv3-green.svg?style=flat)](https://github.com/SatelliteApplicationsCatapult/fulgurite/blob/master/LICENSE.txt)
 
-Fulgurite is a way to use Apache Spark to process GeoTIF images in a distributed way.
+Fulgurite is a way to use Apache Spark to process GeoTIFF images in a distributed way.
 
 [Fulgurite](https://en.wikipedia.org/wiki/Fulgurite) is also the name for a rock formed by a lightning strike with the
 ground.
 
 ## Overview
 
-This project mainly consists of functions in the `GeoSparkUtils` class which allow the reading and writing of GeoTiff
+This project mainly consists of functions in the `GeoSparkUtils` class which allow the reading and writing of GeoTIFF
 files.
 
-GeoTif files can be read using the `GeoSparkUtils.GeoTiffRDD()` function, this will return an RDD containing index of
+GeoTIFF files can be read using the `GeoSparkUtils.GeoTiffRDD()` function, this will return an RDD containing index of
 pixels and band values.
 
-Writing GeoTiff files is done with `GeoSparkUtils.saveGeoTiff()`. The results of this then need to be joined together
+Writing GeoTIFF files is done with `GeoSparkUtils.saveGeoTiff()`. The results of this then need to be joined together
 with the join output methods in `GeoSparkUtils`. The header will be in header.tiff and the body in the part-* files. A 
 line like the following should join things up:
 
@@ -68,5 +68,5 @@ This project is licensed under the [LGPL3](https://github.com/SatelliteApplicati
 
 ## Thanks
 Thanks to the [Apache Spark](https://github.com/apache/spark) project and [JAI](https://github.com/jai-imageio/jai-imageio-core) 
-for building the code this is built on top of. Thanks to Mike Nidel for the GeoTiff IIO Metadata Adapter which we used 
-early in this project and taught us a lot about the GeoTiff format.
+for building the code this is built on top of. Thanks to Mike Nidel for the GeoTIFF IIO Metadata Adapter which we used 
+early in this project and taught us a lot about the GeoTIFF format.

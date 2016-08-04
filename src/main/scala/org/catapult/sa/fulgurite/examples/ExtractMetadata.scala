@@ -7,7 +7,11 @@ import org.catapult.sa.fulgurite.spark.Arguments
 import org.w3c.dom.Node
 
 /**
-  * Extract the meta data from a GeoTiff and output it as an XML file
+  * Extract the meta data from a GeoTIFF and output it as an XML file.
+  *
+  * Outputs to stdout. Use as a tool and pipe into a file if you need that functionality
+  *
+  * This can be useful to find out why things are not working.
   */
 object ExtractMetadata extends Arguments {
 

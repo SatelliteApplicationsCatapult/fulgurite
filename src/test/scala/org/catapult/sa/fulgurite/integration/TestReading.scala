@@ -11,7 +11,7 @@ import org.junit.Test
 class TestReading {
 
   @Test
-  def basicReadingTest(): Unit = {
+  def chunkedReadingTest(): Unit = {
     val sc = getSparkContext("basicReadingTest", "local[2]")
 
     val metaData = GeoTiffMeta("src/test/resources/data_chunked.tif")
@@ -22,5 +22,23 @@ class TestReading {
     val expected = (0 until 11).flatMap(y => (0 until 11).flatMap(x => List(255, 128, 0))).toArray
 
     assertArrayEquals(expected, result)
+  }
+
+  @Test
+  def planarReadingTest(): Unit = {
+    val sc = getSparkContext("basicReadingTest", "local[2]")
+
+    val metaData = GeoTiffMeta("src/test/resources/data_planar.tif")
+    val result = GeoSparkUtils.GeoTiffRDD("src/test/resources/data_planar.tif", metaData, sc, 10 )
+      .map(_._2)
+      .collect()
+
+    val expected = for {
+      band <- 0 until 3
+      y <- 0 until 11
+      x <- 0 until 11
+    } yield if (band == 3) 255 else band
+
+    assertArrayEquals(expected.toArray, result)
   }
 }

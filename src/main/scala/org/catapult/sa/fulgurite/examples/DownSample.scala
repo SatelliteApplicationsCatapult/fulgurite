@@ -4,7 +4,8 @@ import org.catapult.sa.fulgurite.geotiff.GeoTiffMeta
 import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils}
 
 /**
-  * make the input geotiff some factor smaller
+  * This example takes an input GeoTIFF and makes it a factor smaller. Averaging all the pixels merged to make a
+  * lower resolution resulting image.
   */
 object DownSample extends Arguments {
 
@@ -14,13 +15,13 @@ object DownSample extends Arguments {
     val opts = processArgs(args)
     val sc = getSparkContext("Example-DownSample", "local[1]")
 
-    val partitionSize = opts("partitions").toLong
-    val sampleSize = opts("group").toInt
+    val partitionSize = opts("partitions").toLong // number of spark partitions to use.
+    val sampleSize = opts("group").toInt // number of pixels to group together in each axis.
 
     // read the input image metadata
     val metaData = GeoTiffMeta(opts("input"))
 
-    // read the geoTiff and group the indexes up to smaller values. Average the values for each band.
+    // read the GeoTIFF and group the indexes up to smaller values. Average the values for each band.
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc, partitionSize)
         .map { case (i, d) => i.groupFunction(sampleSize) -> d }
         .aggregateByKey(0 -> 0, 1000)(average, averageSum)

@@ -6,7 +6,7 @@ import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
 import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils}
 
 /**
-  * Read a tiff and turn it into an ASC file
+  * Read a GeoTIFF and turn it into an ASC file
   */
 object GeoTiffToASC extends Arguments {
 
@@ -15,6 +15,7 @@ object GeoTiffToASC extends Arguments {
     val opts = processArgs(args)
     val sc = getSparkContext("Example-Convert", "local[2]")
 
+    // get the metadata and make sure that the target band is actually in the image.
     val metaData = GeoTiffMeta(opts("input"))
     val targetBand = opts("band").toInt
     if (metaData.samplesPerPixel <= targetBand) {
@@ -24,24 +25,23 @@ object GeoTiffToASC extends Arguments {
     // pick the ordering we want for the output.
     implicit val indexOrder = Index.orderingByBandOutput
 
+    // read the GeoTIFF, filter, sort and convert into ascii format.
     val converted = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc)
         .filter { case (i, d) => i.band == targetBand } // only pull out the band we are interested in.
-        .sortByKey()
+        .sortByKey() // this uses the implicit ordering we declared earlier
         .map { case(i, d) =>
-          if (i.x == 0 && i.y == 0) {
-            d.toString
-          } else if (i.x == 0) {
-            "\n" + d.toString
-          } else {
-            " " + d.toString
+          (i.x, i.y) match {
+            case (0, 0) => d.toString
+            case (0, _) => "\n" + d.toString
+            case (_, _) => " " + d.toString
           }
         }
 
-    // save the result.
+    // save the result as a raw text file.
     GeoSparkUtils.saveRawTextFile(converted, opts("output"))
     generateHeader(metaData, opts("output") + "/header.txt")
     GeoSparkUtils.joinOutputFiles(opts("output") + "/header.txt", opts("output"), opts("output") + "/output.asc")
-    sc.stop()
+    sc.stop() // stop the context now we are finished with it.
 
     println(opts("output")) // Print where the output directory was so its easier to find it.
   }

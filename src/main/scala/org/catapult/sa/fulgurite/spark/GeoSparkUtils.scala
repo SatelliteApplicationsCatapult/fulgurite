@@ -11,12 +11,12 @@ import org.apache.spark.rdd.RDD
 import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, GeoTiffMetaHelper, Index}
 
 /**
-  * Utility functions for working with geo tiff files.
+  * Utility functions for working with GeoTIFF files.
   */
 object GeoSparkUtils {
 
   /**
-    * Read a GeoTiff and return pixels as records.
+    * Read a GeoTIFF and return pixels as records.
     *
     * @param path path to the file to read
     * @param meta the metadata from the file.
@@ -45,9 +45,7 @@ object GeoSparkUtils {
   }
 
   /**
-    * Save a geotiff based on the data in the rdd and the provided metadata.
-    *
-    * The baseMeta should come from the original file.
+    * Save a GeoTIFF based on the data in the rdd and the provided metadata.
     *
     * The numPartitions is used by the sorting that is required by this for the output to end up non mangled. You will
     * want to tune this depending on the images you are loading and the size of your cluster. We recommend some
@@ -61,6 +59,27 @@ object GeoSparkUtils {
     * @param numPartitions how many partitions to use when sorting and also how many output files get created.
     */
   def saveGeoTiff(rdd : RDD[(Index,  Int)], meta : GeoTiffMeta, path : String, numPartitions : Int = 1000) : Unit = {
+    saveGeoTiffData(rdd, meta, path, numPartitions)
+    saveGeoTiffMetaData(meta, path)
+  }
+
+  /**
+    * Save the rdd as GeoTIFF data formatted according to the provided metadata.
+    *
+    * This does not save the metadata. Use saveGeoTiff or saveGeoTiffMetaData to do that.
+    *
+    * The numPartitions is used by the sorting that is required by this for the output to end up non mangled. You will
+    * want to tune this depending on the images you are loading and the size of your cluster. We recommend some
+    * experiments here to work out the best value for your system.
+    *
+    * NOTE: On windows this will require the HADOOP_HOME environment variable to be set to where the winutils.exe is.
+    *
+    * @param rdd data for the bands
+    * @param meta metadata for the
+    * @param path where to create the output.
+    * @param numPartitions how many partitions to use when sorting and also how many output files get created.
+    */
+  def saveGeoTiffData(rdd : RDD[(Index,  Int)], meta : GeoTiffMeta, path : String, numPartitions : Int = 1000) : Unit = {
     implicit val indexOrdering = meta.planarConfiguration match {
       case 1 => Index.orderingByPositionThenBand
       case 2 => Index.orderingByBandOutput
@@ -72,7 +91,6 @@ object GeoSparkUtils {
       .map { case (i, d) => new BytesWritable(Array.emptyByteArray) -> new BytesWritable(convertToBytes(i.band, d)) }
       .saveAsNewAPIHadoopFile(path, classOf[BytesWritable], classOf[BytesWritable], classOf[RawBinaryOutputFormat])
 
-    saveGeoTiffMetaData(meta, path)
   }
 
   /**
@@ -142,11 +160,32 @@ object GeoSparkUtils {
     }
   }
 
-  def saveRawTextFile(rdd : RDD[String], fileName : String) : Unit = {
+  /**
+    * Save a RDD of strings as a text file with out any formatting. No new lines or any thing.
+    * If you need new lines the input strings must have newlines in.
+    *
+    * The output of this will be chunked by the number of partitions in the input RDD
+    *
+    * NOTE: On windows this will require the HADOOP_HOME environment variable to be set to where the winutils.exe is.
+    *
+    * @param rdd rdd of strings to write to the file.
+    * @param path where to write the files
+    */
+  def saveRawTextFile(rdd : RDD[String], path : String) : Unit = {
     rdd.map(e => NullWritable.get() -> new Text(e))
-      .saveAsNewAPIHadoopFile(fileName, classOf[NullWritable], classOf[Text], classOf[RawTextOutputFormat])
+      .saveAsNewAPIHadoopFile(path, classOf[NullWritable], classOf[Text], classOf[RawTextOutputFormat])
   }
 
+  /**
+    * Join a set of files together with a header.
+    *
+    * This is useful to join the parts created by saveGeoTiff and saveRawTextFile together along with the headers.
+    *
+    * @param headerPath path to the header file (This will always be written first)
+    * @param path path to the location of the rest of the files
+    * @param outputName full path of the resulting output file
+    * @param prefix prefix used to filter the input path.
+    */
   def joinOutputFiles(headerPath: String, path: String, outputName: String, prefix: String = "part-"): Unit = {
     val dir = new File(path)
     if (! dir.isDirectory) {
@@ -157,6 +196,14 @@ object GeoSparkUtils {
     joinFiles(outputName, List(new File(headerPath), new File(outputName + ".tmp")):_*)
   }
 
+  /**
+    * Join a set of files together.
+    *
+    * Somewhat like cat
+    *
+    * @param outputPath where to write the result
+    * @param files ordered set of files to join together.
+    */
   def joinFiles(outputPath : String, files : File*) : Unit = {
     val output = new File(outputPath)
     if (output.exists()) {
@@ -183,6 +230,14 @@ object GeoSparkUtils {
     outputStream.close()
   }
 
+  /**
+    * Create a function that will create the Index for a given set of metadata when reading.
+    *
+    * Creating the function in this way means that we have less branches when doing the reading.
+    *
+    * @param meta the metadata for the file being read.
+    * @return function for converting the result of a hadoop binary read into index and values.
+    */
   private def createKeyValue(meta : GeoTiffMeta) : ((LongWritable, BytesWritable)) => (Index, Int) = {
     val width = meta.width
     val height = meta.height
@@ -208,6 +263,12 @@ object GeoSparkUtils {
     }
   }
 
+  /**
+    * Create a function for converting bands and value into bytes to output.
+    *
+    * @param meta the metadata that describes the output file. Must match up to the incoming data.
+    * @return function to convert bands and data values into byte arrays.
+    */
   private def createBytes(meta : GeoTiffMeta) : (Int, Int) => Array[Byte] = {
     val bytesPerPixel = meta.bitsPerSample
     (band, d) => bytesPerPixel(band) match {
