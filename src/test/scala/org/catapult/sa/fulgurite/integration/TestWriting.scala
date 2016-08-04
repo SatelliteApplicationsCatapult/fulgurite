@@ -26,7 +26,8 @@ class TestWriting {
 
     val metaData = GeoTiffMeta(11L, 11L, 3, Array(8, 8, 8), 0, 0, Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
       Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Int], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
-      Array(1L, 1L), Array(1L, 1L), 0, Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
+      Array(1L, 1L), Array(1L, 1L), BaselineTIFFTagSet.COMPRESSION_NONE,
+      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
     )
 
     val input = sc.parallelize((0 until 11).flatMap(y => (0 until 11).flatMap(x => List(Index(x, y, 0) -> 255, Index(x, y, 1) -> 128, Index(x, y, 2) -> 0))))
@@ -53,7 +54,8 @@ class TestWriting {
 
     val metaData = GeoTiffMeta(11L, 11L, 3, Array(8, 8, 8), 0, 0, Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
       Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Int], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
-      Array(1L, 1L), Array(1L, 1L), 0, Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
+      Array(1L, 1L), Array(1L, 1L), BaselineTIFFTagSet.COMPRESSION_NONE,
+      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
     )
 
     metaData.planarConfiguration = BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR
@@ -87,7 +89,8 @@ class TestWriting {
 
     val metaData = GeoTiffMeta(11L, 11L, 3, Array(8, 8, 8), 0, 0, Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
       Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Int], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
-      Array(1L, 1L), Array(1L, 1L), 0, Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
+      Array(1L, 1L), Array(1L, 1L), BaselineTIFFTagSet.COMPRESSION_NONE,
+      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
     )
 
     metaData.planarConfiguration = BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR
@@ -115,4 +118,19 @@ class TestWriting {
     assertArrayEquals(expected, result)
   }
 
+
+  @Test(expected = classOf[IllegalArgumentException])
+  def failCompressedWriting() : Unit = {
+    val sc = getSparkContext("TestWriting", "local[2]")
+
+    val metaData = GeoTiffMeta(11L, 11L, 3, Array(8, 8, 8), 0, 0, Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+      Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Int], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
+      Array(1L, 1L), Array(1L, 1L), BaselineTIFFTagSet.COMPRESSION_JPEG,
+      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
+    )
+
+    val inputRDD = sc.emptyRDD[(Index, Int)]
+
+    GeoSparkUtils.saveGeoTiff(inputRDD, metaData, "wibble", 10)
+  }
 }

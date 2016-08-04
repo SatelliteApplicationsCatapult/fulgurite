@@ -25,6 +25,11 @@ object GeoSparkUtils {
     * @return RDD of Index to DataPoint
     */
   def GeoTiffRDD(path : String, meta: GeoTiffMeta, sc : SparkContext, partitionSize : Long = 400000) : RDD[(Index, Int)] = {
+
+    if (meta.isCompressed) {
+      throw new IllegalArgumentException("Can not handle compressed GeoTIFF files.")
+    }
+
     val bytesPerRecord = meta.bytesPerSample.min  // TODO: this won't work if any of the bands have different byte widths.
                                                   // We don't have any examples where this is the case. If this causes
                                                   // problems please raise a bug on github and include an example image
@@ -80,6 +85,11 @@ object GeoSparkUtils {
     * @param numPartitions how many partitions to use when sorting and also how many output files get created.
     */
   def saveGeoTiffData(rdd : RDD[(Index,  Int)], meta : GeoTiffMeta, path : String, numPartitions : Int = 1000) : Unit = {
+
+    if (meta.isCompressed) {
+      throw new IllegalArgumentException("Can not handle compressed GeoTIFF files.")
+    }
+
     implicit val indexOrdering = meta.planarConfiguration match {
       case 1 => Index.orderingByPositionThenBand
       case 2 => Index.orderingByBandOutput

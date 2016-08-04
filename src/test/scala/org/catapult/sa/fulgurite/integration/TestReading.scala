@@ -1,5 +1,6 @@
 package org.catapult.sa.fulgurite.integration
 
+import com.github.jaiimageio.plugins.tiff.BaselineTIFFTagSet
 import org.catapult.sa.fulgurite.geotiff.GeoTiffMeta
 import org.catapult.sa.fulgurite.spark.GeoSparkUtils
 import org.junit.Assert._
@@ -40,5 +41,14 @@ class TestReading {
     } yield if (band == 3) 255 else band
 
     assertArrayEquals(expected.toArray, result)
+  }
+
+  @Test(expected = classOf[IllegalArgumentException])
+  def tryReadCompressed() : Unit = {
+    val sc = getSparkContext("basicReadingTest", "local[2]")
+    val metaData = GeoTiffMeta("src/test/resources/data_planar.tif")
+    metaData.compression = BaselineTIFFTagSet.COMPRESSION_JPEG
+    GeoSparkUtils.GeoTiffRDD("src/test/resources/data_planar.tif", metaData, sc, 10 )
+
   }
 }
