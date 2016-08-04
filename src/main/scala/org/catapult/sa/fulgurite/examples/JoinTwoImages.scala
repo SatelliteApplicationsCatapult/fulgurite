@@ -4,7 +4,7 @@ import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, Index}
 import org.catapult.sa.fulgurite.spark.{Argument, Arguments, GeoSparkUtils}
 
 /**
-  * Example program to stitch two GeoTiff images together.
+  * Example program to stitch two GeoTIFF images together.
   */
 object JoinTwoImages extends Arguments  {
 

@@ -8,7 +8,7 @@ import com.github.jaiimageio.plugins.tiff.{BaselineTIFFTagSet, GeoTIFFTagSet, TI
 import collection.JavaConversions._
 
 /**
-  * Helper class to extract fields from GeoTiff metadata
+  * Helper class to extract fields from GeoTIFF metadata
   *
   * Wraps up an instance of IOMetadata and provides readonly accessors to the required fields
   *

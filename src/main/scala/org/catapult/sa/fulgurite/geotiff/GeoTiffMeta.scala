@@ -41,7 +41,7 @@ object GeoTiffMeta {
       geoMeta.geoAsciiParams,
       geoMeta.xResolution, geoMeta.yResolution,
       geoMeta.compression,
-      geoMeta.geoKeyDirectory.map(_.toInt)
+      geoMeta.geoKeyDirectory
     )
 
   }
