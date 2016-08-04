@@ -4,6 +4,8 @@ import java.io.{File, IOException}
 import javax.imageio.ImageIO
 import javax.imageio.metadata.IIOMetadata
 
+import com.github.jaiimageio.plugins.tiff.BaselineTIFFTagSet
+
 /**
   * Metadata for geo tiff files
   */
@@ -22,6 +24,8 @@ case class GeoTiffMeta(var width : Long, var height : Long,
                        var geoKeyDirectory : Array[Int]) {
 
   def bytesPerSample = bitsPerSample.map(b => (b + 7) / 8)
+
+  def isCompressed = this.compression != BaselineTIFFTagSet.COMPRESSION_NONE
 
   // TODO: Rebuild toString method
 }
