@@ -5,6 +5,8 @@ repositories {
 }
 
 dependencies {
-    compile 'org.scala-lang:scala-library:${rootProject.ext.scalaVersion}'
     compile project(':fulgurite-core')
+
+    compile 'org.scala-lang:scala-library:${rootProject.ext.scalaVersion}'
+    compile 'com.vividsolutions:jts:1.13'
 }
