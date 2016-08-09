@@ -11,7 +11,7 @@ import org.apache.spark.rdd.RDD
 import org.catapult.sa.fulgurite.geotiff.{GeoTiffMeta, GeoTiffMetaHelper, Index}
 
 /**
-  * Utility functions for working with GeoTIFF files.
+  * Functions for working with GeoTIFF files.
   */
 object GeoSparkUtils {
 
@@ -238,6 +238,69 @@ object GeoSparkUtils {
 
     outputStream.flush()
     outputStream.close()
+  }
+
+  /**
+    * Group up all the bands for a pixel into a single record so you can access them all at once.
+    *
+    * The positions in the resulting arrays will correspond to the original bands.
+    *
+    * e.g:
+    *
+    * Index(1, 2, 0) -> 123
+    * Index(1, 2, 1) -> 56
+    * Index(1, 2, 2) -> 23
+    *
+    * Becomes
+    *
+    * (1, 2) -> Array(123, 56, 23)
+    *
+    * This is a wide and expensive operation.
+    *
+    * @param rdd the rdd to group up
+    * @param bands number of bands in the stream. (This needs to be accurate)
+    * @return grouped up rdd.
+    */
+  def pixelGroup(rdd : RDD[(Index, Int)], bands : Int) : RDD[((Long, Long), Array[Option[Int]])] = {
+
+    def setValues(a : Array[Option[Int]], b : (Int, Int)) : Array[Option[Int]] = {
+      a.update(b._1, Some(b._2))
+      a
+    }
+
+    def mergeValues(a : Array[Option[Int]], b : Array[Option[Int]]) : Array[Option[Int]] = {
+      b.zipWithIndex.filter(_._1.isDefined).foreach(f => a.update(f._2, f._1))
+      a
+    }
+
+    // Use optionals as there may be missing entries for a band. Also when merging we need to make sure we don't over
+    // write things.
+    rdd.map { case (i, d) =>
+      (i.x -> i.y) -> (i.band -> d)
+    }.aggregateByKey((0 until bands).map(i => Option.empty[Int]).toArray)(setValues, mergeValues)
+
+  }
+
+  /**
+    * Un-group a grouped set of pixes and generate the index objects.
+    *
+    * e.g:
+    *
+    * (1, 2) -> Array(123, 56, 23)
+    *
+    * becomes:
+    *
+    * Index(1, 2, 0) -> 123
+    * Index(1, 2, 1) -> 56
+    * Index(1, 2, 2) -> 23
+    *
+    * @param rdd grouped RDD Pair X and Y cords to array of band values
+    * @return un grouped index based RDD
+    */
+  def pixelUnGroup(rdd : RDD[((Long, Long), Array[Option[Int]])]) : RDD[(Index, Int)] = {
+    rdd.flatMap { case ((x, y), d) =>
+      d.zipWithIndex.filter(_._1.isDefined).map { case (data, i) => Index(x, y, i) -> data.get }
+    }
   }
 
   /**
