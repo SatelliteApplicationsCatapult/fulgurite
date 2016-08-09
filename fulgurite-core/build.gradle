@@ -1,0 +1,27 @@
+group 'org.catapult.sa'
+version '0.1-SNAPSHOT'
+
+apply plugin : 'scala'
+apply plugin : 'maven'
+
+sourceCompatibility = 1.8
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.scala-lang:scala-library:${rootProject.ext.scalaVersion}'
+    compile 'org.apache.spark:spark-core_2.11:1.6.1'
+    compile 'com.github.jai-imageio:jai-imageio-core:1.3.1'
+    compile 'com.vividsolutions:jts:1.13'
+    compile 'commons-io:commons-io:2.4'
+
+    testCompile 'junit:junit:4.4'
+}
+import org.gradle.internal.os.OperatingSystem
+test {
+    if (OperatingSystem.current().isWindows()) {
+        systemProperty 'HADOOP_HOME', System.properties['hadoophome']
+        environment 'HADOOP_HOME', System.properties['hadoophome']
+    }
+}

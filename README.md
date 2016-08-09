@@ -11,7 +11,7 @@ ground.
 ## Overview
 
 This project mainly consists of functions in the `GeoSparkUtils` class which allow the reading and writing of GeoTIFF
-files.
+files along with other operations.
 
 GeoTIFF files can be read using the `GeoSparkUtils.GeoTiffRDD()` function, this will return an RDD containing index of
 pixels and band values.
@@ -27,24 +27,29 @@ contains several other examples.
 
 ## Deployment and Usage
 
-Currently this project is not in Maven. We will be working on that soon. Build a Jar from this project with the
-`mvn package` target or use the `mvn install`, and then include the following for your dependency:
+Currently this project is not in a Maven repo. We will be working on that soon. Build the entire project with the
+`./gradlew build` target or use the `./gradlew :fulgurite-core:install` target to put it in your local maven cache and 
+then include the following for your dependency:
+
+Gradle:
+```
+compile 'org.catapult.sa:fulgurite-core:0.1-SNAPSHOT'
+```
 
 Maven:
 ```
   <dependency>
     <groupId>org.catapult.sa</groupId>
-    <artifactId>fulgurite</artifactId>
+    <artifactId>fulgurite-core</artifactId>
     <version>0.1-SNAPSHOT</version>
   </dependency>
 ```
-Gradle:
-```
-compile 'org.catapult.sa:fulgurite:0.1-SNAPSHOT'
-```
 
-**Please note:** building on windows requires the use of the hadoop `winutils.exe` and the `HADOOP_HOME` environment 
-variable being set so it can be found.
+**Please note:** building on windows requires the use of the hadoop `winutils.exe` to be able to run the tests This can 
+be set by filling out the placeholder `gradle.properties` file included with the project. Or you can add it to your 
+personal `gradle.properties` in `~/.gradle/` A directory needs to be created some where on your system 
+that contains the [hadoop windows build](http://www.barik.net/archive/2015/01/19/172716/) then the path to this 
+directory needs to be added to your `gradle.properties` `systemProp.hadoophome` setting.
 
 If there are any problems with this process, please raise a bug.
 

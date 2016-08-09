@@ -1,0 +1,10 @@
+apply plugin : 'scala'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.scala-lang:scala-library:${rootProject.ext.scalaVersion}'
+    compile project(':fulgurite-core')
+}
