@@ -5,5 +5,5 @@ version '0.1-SNAPSHOT'
 // this causes a warning to be issued if its not.
 import org.gradle.internal.os.OperatingSystem
 if ((System.properties['hadoophome'] == null || System.properties['hadoophome'] == "") && OperatingSystem.current().isWindows()) {
-    logger.warn("hadoop home system property is not set ")
+    logger.warn("hadoop home system property is not set")
 }

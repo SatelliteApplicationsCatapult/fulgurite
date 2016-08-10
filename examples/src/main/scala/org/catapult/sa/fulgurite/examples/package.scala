@@ -13,7 +13,7 @@ import org.catapult.sa.fulgurite.spark.Argument
 package object examples {
 
   // Default arguments used in the examples
-  val InputArgument = Argument("input", "src/test/resources/tiny.tif")
+  val InputArgument = Argument("input", "fulgurite-core/src/test/resources/tiny.tif")
   val OutputArgument = Argument("output", FileUtils.getTempDirectoryPath + "/test_" + new Date().getTime.toString + ".tif")
 
   val InputOutputArguments = List(InputArgument, OutputArgument)
