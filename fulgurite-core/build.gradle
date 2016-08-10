@@ -1,5 +1,5 @@
-group 'org.catapult.sa'
-version '0.1-SNAPSHOT'
+group rootProject.group
+version rootProject.version
 
 apply plugin : 'scala'
 apply plugin : 'maven'
@@ -18,10 +18,26 @@ dependencies {
 
     testCompile 'junit:junit:4.4'
 }
+
 import org.gradle.internal.os.OperatingSystem
-test {
-    if (OperatingSystem.current().isWindows()) {
+if (OperatingSystem.current().isWindows()) {
+    test {
         systemProperty 'HADOOP_HOME', System.properties['hadoophome']
         environment 'HADOOP_HOME', System.properties['hadoophome']
     }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
 }

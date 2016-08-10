@@ -4,6 +4,6 @@ version '0.1-SNAPSHOT'
 // on windows the hadoophome enviroment variable needs to be set.
 // this causes a warning to be issued if its not.
 import org.gradle.internal.os.OperatingSystem
-if ((System.properties['hadoophome'] == null || System.properties['hadoophome'] == "") && OperatingSystem.current().isWindows()) {
+if (!System.properties['hadoophome'] && OperatingSystem.current().isWindows()) {
     logger.warn("hadoop home system property is not set")
 }
