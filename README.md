@@ -49,7 +49,9 @@ Maven:
 be set by filling out the placeholder `gradle.properties` file included with the project. Or you can add it to your 
 personal `gradle.properties` in `~/.gradle/` A directory needs to be created some where on your system 
 that contains the [hadoop windows build](http://www.barik.net/archive/2015/01/19/172716/) then the path to this 
-directory needs to be added to your `gradle.properties` `systemProp.hadoophome` setting.
+directory needs to be added to your `gradle.properties` `systemProp.hadoophome` setting. Also note in properties files \\
+is an escape character so they either need to be doubled up \\\\ or replaced with / The path should also not be quoted
+or have spaces escaped.
 
 If there are any problems with this process, please raise a bug.
 
