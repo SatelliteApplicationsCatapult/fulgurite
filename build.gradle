@@ -2,8 +2,17 @@ group 'org.catapult.sa'
 version '0.1-SNAPSHOT'
 
 // on windows the hadoophome enviroment variable needs to be set.
-// this causes a warning to be issued if its not.
+// this causes a error to be issued if its not.
 import org.gradle.internal.os.OperatingSystem
-if (!System.properties['hadoophome'] && OperatingSystem.current().isWindows()) {
-    logger.warn("hadoop home system property is not set")
+if ((!System.properties['hadoophome'] || !new File(System.properties['hadoophome'].toString()).isDirectory()) && OperatingSystem.current().isWindows()) {
+    logger.error("\n***************************************************************************************************")
+    logger.error("ERROR: hadoophome system property is not set to a valid directory The tests will not ba able to run.")
+    logger.error("Set systemProp.hadoophome in the gradle.properties file to the location of a ")
+    logger.error("windows hadoop build that includes winutils.exe")
+    logger.error("\nA pre built copy can be found: http://www.barik.net/archive/2015/01/19/172716/")
+    logger.error("\nPlease Note: \\ is an escape character in properties files. So they need to be doubled up or ")
+    logger.error("replaced with / when entering a windows style path. Also do not quote the path or escape spaces.")
+    logger.error("\nhadoophome: " + System.properties['hadoophome'] )
+    logger.error("***************************************************************************************************\n")
+    throw new GradleException("Hadoop Home not set.") // abort build
 }
