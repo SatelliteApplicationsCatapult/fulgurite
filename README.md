@@ -73,6 +73,8 @@ things if we can.
 ## License
 This project is licensed under the [LGPL3](https://github.com/SatelliteApplicationsCatapult/fulgurite/blob/master/LICENSE.txt).
 
+Copyright (c) 2016 Satellite Applications Catapult.
+
 ## Thanks
 Thanks to the [Apache Spark](https://github.com/apache/spark) project and [JAI](https://github.com/jai-imageio/jai-imageio-core) 
 for building the code this is built on top of. Thanks to Mike Nidel for the GeoTIFF IIO Metadata Adapter which we used 
