@@ -71,6 +71,7 @@ object GeoTiffMetaHelper {
     setGeoDoubles(rootIFD, GeoTIFFTagSet.TAG_MODEL_PIXEL_SCALE, meta.pixelScales)
     setInt(rootIFD, BaselineTIFFTagSet.TAG_PLANAR_CONFIGURATION, meta.planarConfiguration)
     setInt(rootIFD, BaselineTIFFTagSet.TAG_PHOTOMETRIC_INTERPRETATION, meta.photometricInterpretation)
+    setInt(rootIFD, BaselineTIFFTagSet.TAG_ROWS_PER_STRIP, 1)
 
     rootIFD.addTIFFField(new TIFFField(geoTiffBase.getTag(GeoTIFFTagSet.TAG_GEO_ASCII_PARAMS), TIFFTag.TIFF_ASCII, 1, Array(meta.geoAsciiParams)))
 

@@ -161,7 +161,7 @@ object GeoSparkUtils {
       ios.seek(rootIFD.getStripOrTileByteCountsPosition)
       0.until(meta.samplesPerPixel).foreach { s =>
         val rowWidth = meta.width * meta.bytesPerSample(s)
-        0L.until(meta.height).foreach { i =>
+        0L.until(meta.height).foreach { _ =>
           ios.writeInt(rowWidth.asInstanceOf[Int])
         }
       }

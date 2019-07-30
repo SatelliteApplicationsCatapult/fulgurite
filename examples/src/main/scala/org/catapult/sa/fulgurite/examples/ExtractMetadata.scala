@@ -19,7 +19,7 @@ object ExtractMetadata extends Arguments {
 
   def main(args : Array[String]) : Unit = {
     val opts = processArgs(args)
-    val file = new File(opts("in"))
+    val file = new File(opts("input"))
 
     if (file == null || !file.canRead || !file.isFile) {
       throw new IOException("Can not read " + opts("in"))
