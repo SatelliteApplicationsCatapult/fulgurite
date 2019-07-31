@@ -1,5 +1,8 @@
 package org.catapult.sa.fulgurite
 
+import java.util.Date
+
+import org.apache.commons.io.FileUtils
 import org.apache.spark.{SparkConf, SparkContext}
 import org.catapult.sa.fulgurite.geotiff.Index
 import org.catapult.sa.fulgurite.spark.Argument
@@ -10,8 +13,8 @@ import org.catapult.sa.fulgurite.spark.Argument
 package object examples {
 
   // Default arguments used in the examples
-  val InputArgument = Argument("input", "c:\\git\\LC08_L1TP_203024_20190513_20190521_01_T1_uncompressed_py_clipped.TIF")
-  val OutputArgument = Argument("output", "c:\\git\\output32.tif")//FileUtils.getTempDirectoryPath + "/test_" + new Date().getTime.toString + ".tif")
+  val InputArgument = Argument("input", "fulgurite-core/src/test/resources/tiny.tif")
+  val OutputArgument = Argument("output", FileUtils.getTempDirectoryPath + "/test_" + new Date().getTime.toString + ".tif")
 
   val InputOutputArguments = List(InputArgument, OutputArgument)
 
