@@ -37,6 +37,7 @@ class TestWriting {
 
     val result = new Array[Byte](4000)
     val expected = new Array[Byte](4000)
+
     IOUtils.read(new FileInputStream(outputName + "/data.tif"), result)
     IOUtils.read(new FileInputStream("src/test/resources/data_chunked.tif"), expected)
 
@@ -73,6 +74,7 @@ class TestWriting {
 
     val result = new Array[Byte](4000)
     val expected = new Array[Byte](4000)
+
     IOUtils.read(new FileInputStream(outputName + "/data.tif"), result)
     IOUtils.read(new FileInputStream("src/test/resources/data_planar.tif"), expected)
 
@@ -112,6 +114,7 @@ class TestWriting {
 
     val result = new Array[Byte](4000)
     val expected = new Array[Byte](4000)
+
     IOUtils.read(new FileInputStream(outputName + "/data.tif"), result)
     IOUtils.read(new FileInputStream("src/test/resources/data_planar_transparent.tif"), expected)
 
