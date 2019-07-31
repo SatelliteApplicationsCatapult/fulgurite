@@ -12,7 +12,7 @@ object NDVI extends Arguments {
 
   def main(args : Array[String]) : Unit = {
     val opts = processArgs(args)
-    val sc = getSparkContext("Example-BW", "local[3]")
+    val sc = getSparkContext("Example-NDVI", "local[3]")
     val metaData = GeoTiffMeta(opts("input"))
     val inut = "input"
       println(inut)
@@ -21,15 +21,18 @@ object NDVI extends Arguments {
       println("requires a GeoTIFF with more than one band of data")
     }
 
+    val NIR_Band = 3
+    val Red_Band = 2
     val input = GeoSparkUtils.GeoTiffRDD(opts("input"), metaData, sc, 4000000)
-      .filter(e => e._1.band==2 || e._1.band==3)//assuming e starts from 0, getting bands 3 and 4 from the array, prod
-      //.collect().foreach(println)//how do you print without changing the input so it can be placed into teh next row
-    val blackAndWhite = GeoSparkUtils.pixelGroup(input, metaData.samplesPerPixel)
+      .filter(e => e._1.band==Red_Band || e._1.band==NIR_Band)
+    val NDVI = GeoSparkUtils.pixelGroup(input, metaData.samplesPerPixel)
       .map { case (i, d) =>
-        val result = if ((d(2).get + d(3).get) == 0) {
+        val NIR = d(NIR_Band).get.toDouble
+        val Red = d(Red_Band).get.toDouble
+        val result = if ((NIR + Red) == 0) {
           0
         } else {
-          (((d(3).get.toDouble - d(2).get.toDouble) / (d(2).get.toDouble + d(3).get.toDouble))*256.0).toInt
+          (((NIR - Red) / (NIR + Red))*256.0).toInt
         }
         Index.apply(i._1, i._2, 0) -> result
       }
@@ -38,11 +41,11 @@ object NDVI extends Arguments {
     resultMeta.samplesPerPixel = 1
     resultMeta.photometricInterpretation = BaselineTIFFTagSet.PHOTOMETRIC_INTERPRETATION_BLACK_IS_ZERO
     resultMeta.extraSamples = Array(0)
-    resultMeta.sampleFormat = Array(BaselineTIFFTagSet.SAMPLE_FORMAT_UNSIGNED_INTEGER)
+    resultMeta.sampleFormat = Array(BaselineTIFFTagSet.SAMPLE_FORMAT_SIGNED_INTEGER)
     resultMeta.bitsPerSample = Array(16)
 
 
-    GeoSparkUtils.saveGeoTiff(blackAndWhite, resultMeta, opts("output"))
+    GeoSparkUtils.saveGeoTiff(NDVI, resultMeta, opts("output"))
     GeoSparkUtils.joinOutputFiles(opts("output") + "/header.tiff", opts("output"), opts("output") + "/data.tif")
 
     sc.stop()

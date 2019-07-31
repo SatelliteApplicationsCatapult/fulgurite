@@ -44,7 +44,7 @@ class GeoTiffMetaHelper(baseMeta : IIOMetadata) {
   private def getStringField(field : Int) = baseGet(field, "", _.getAsString(0))
   private def getRationalField(field : Int, offset : Int = 0) = baseGet(field, Array(0L, 0L), _.getAsRational(offset))
 
-  private def baseGet[T](field : Int, nullValue : T, extractor : (TIFFField) => T) : T = {
+  private def baseGet[T](field : Int, nullValue : T, extractor : TIFFField => T) : T = {
     meta.getTIFFField(field) match {
       case null => nullValue
       case f => extractor(f)
@@ -71,7 +71,14 @@ object GeoTiffMetaHelper {
     setGeoDoubles(rootIFD, GeoTIFFTagSet.TAG_MODEL_PIXEL_SCALE, meta.pixelScales)
     setInt(rootIFD, BaselineTIFFTagSet.TAG_PLANAR_CONFIGURATION, meta.planarConfiguration)
     setInt(rootIFD, BaselineTIFFTagSet.TAG_PHOTOMETRIC_INTERPRETATION, meta.photometricInterpretation)
-    setInt(rootIFD, BaselineTIFFTagSet.TAG_ROWS_PER_STRIP, 1)
+
+    val rowsPerStrip = meta.planarConfiguration match {
+      case BaselineTIFFTagSet.PLANAR_CONFIGURATION_CHUNKY => meta.height.toInt
+      case BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR => meta.samplesPerPixel
+      case _ => throw new IllegalArgumentException("Unknown planar configuration")
+    }
+
+    setInt(rootIFD, BaselineTIFFTagSet.TAG_ROWS_PER_STRIP, rowsPerStrip)
 
     rootIFD.addTIFFField(new TIFFField(geoTiffBase.getTag(GeoTIFFTagSet.TAG_GEO_ASCII_PARAMS), TIFFTag.TIFF_ASCII, 1, Array(meta.geoAsciiParams)))
 
