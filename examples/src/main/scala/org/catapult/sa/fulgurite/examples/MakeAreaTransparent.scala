@@ -41,7 +41,7 @@ object MakeAreaTransparent extends Arguments {
     val resultMeta = GeoTiffMeta(metaData)
     resultMeta.samplesPerPixel = metaData.samplesPerPixel + 1 // One extra sample
     resultMeta.bitsPerSample = (8 :: metaData.bitsPerSample.toList).toArray // that is 8 bits
-    resultMeta.extraSamples  = (BaselineTIFFTagSet.EXTRA_SAMPLES_UNASSOCIATED_ALPHA :: metaData.extraSamples.toList).toArray  // the extra sample is a alpha channel
+    resultMeta.extraSamples  = (BaselineTIFFTagSet.EXTRA_SAMPLES_UNASSOCIATED_ALPHA.toChar :: metaData.extraSamples.toList).toArray  // the extra sample is a alpha channel
     resultMeta.sampleFormat  = (BaselineTIFFTagSet.SAMPLE_FORMAT_UNSIGNED_INTEGER :: metaData.sampleFormat.toList).toArray  // the extra sample is an unsigned int.
 
     // write out the result file and metadata

@@ -16,9 +16,10 @@ class TestGrouping {
     val sc = getSparkContext("TestGrouping", "local[2]")
 
     val metaData = GeoTiffMeta(11L, 11L, 3, Array(8, 8, 8), 0, 0, Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-      Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Int], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
+      Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Char], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
       Array(1L, 1L), Array(1L, 1L), BaselineTIFFTagSet.COMPRESSION_NONE,
-      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
+      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001), 1, Array(1, 1, 1),
+      Array.empty[Long], Array.empty[Long]
     )
 
     val input = sc.parallelize(
@@ -43,9 +44,10 @@ class TestGrouping {
     val sc = getSparkContext("TestGrouping", "local[2]")
 
     val metaData = GeoTiffMeta(11L, 11L, 3, Array(8, 8, 8), 0, 0, Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-      Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Int], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
-      Array(1L, 1L), Array(1L, 1L), BaselineTIFFTagSet.COMPRESSION_NONE,
-      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
+      Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Char], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|", Array.empty[Long], Array.empty[Long],
+      BaselineTIFFTagSet.COMPRESSION_NONE,
+      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001), 1, Array(1, 1, 1),
+      Array.empty[Long], Array.empty[Long]
     )
 
     val input = sc.parallelize(

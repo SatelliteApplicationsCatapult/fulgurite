@@ -1,8 +1,9 @@
 package org.catapult.sa.fulgurite.spark
 
 import java.io._
-import javax.imageio.ImageIO
 
+import com.github.jaiimageio.plugins.tiff.BaselineTIFFTagSet
+import javax.imageio.ImageIO
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{BytesWritable, LongWritable, NullWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat
@@ -125,7 +126,6 @@ object GeoSparkUtils {
 
       val writer = writers.next()
       writer.setOutput(ios)
-
       writer.prepareWriteSequence(baseMeta)
 
       var headerNext = ios.getStreamPosition
@@ -144,23 +144,40 @@ object GeoSparkUtils {
       ios.writeInt(0)
 
       ios.flush()
-
       val startPoint = rootIFD.getLastPosition
-      // Now go back and update the IFD with the position offsets of the strips
       ios.seek(rootIFD.getStripOrTileOffsetsPosition)
-      0.until(meta.samplesPerPixel).foreach { s =>
-        val rowWidth = meta.width * meta.bytesPerSample(s)
-        val bandsOffset = startPoint + meta.bytesPerSample.take(s).map(_ * meta.width * meta.height).sum
-        0L.until(meta.height).foreach { i =>
-          val chunk = bandsOffset + (i * rowWidth)
-          ios.writeInt(chunk.asInstanceOf[Int])
+
+      // Now go back and update the IFD with the position offsets of the strips
+      if (meta.planarConfiguration == BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR) {
+
+        0.until(meta.samplesPerPixel).foreach { s =>
+          val rowWidth = meta.width * meta.bytesPerSample(s)
+          val bandsOffset = startPoint + meta.bytesPerSample.take(s).map(_ * meta.width * meta.height).sum
+          0L.until(meta.height).foreach { i =>
+            val chunk = bandsOffset + (i * rowWidth)
+            ios.writeInt(chunk.asInstanceOf[Int])
+          }
+        }
+      } else {
+
+        val bandsOffset = startPoint + meta.bytesPerSample.sum * meta.rowsPerStrip * meta.height
+        0L.until(meta.height).foreach { _ =>
+          ios.writeInt(bandsOffset.asInstanceOf[Int])
         }
       }
 
       // Finally update the row byte lengths
       ios.seek(rootIFD.getStripOrTileByteCountsPosition)
-      0.until(meta.samplesPerPixel).foreach { s =>
-        val rowWidth = meta.width * meta.bytesPerSample(s)
+
+      if (meta.planarConfiguration == BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR) {
+        0.until(meta.samplesPerPixel).foreach { s =>
+          val rowWidth = meta.width * meta.bytesPerSample(s)
+          0L.until(meta.height).foreach { _ =>
+            ios.writeInt(rowWidth.asInstanceOf[Int])
+          }
+        }
+      } else {
+        val rowWidth = meta.width * meta.bytesPerSample.sum
         0L.until(meta.height).foreach { _ =>
           ios.writeInt(rowWidth.asInstanceOf[Int])
         }
