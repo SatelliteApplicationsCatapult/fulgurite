@@ -60,8 +60,8 @@ object GeoTiffToASC extends Arguments {
     output.print("nrows        ")
     output.println(meta.height)
 
-    if (meta.tiePoints != null && meta.tiePoints.length > 2) {
-      val points = meta.tiePoints.filter(_ > 0.0)
+    if (meta.modelTiePoints != null && meta.modelTiePoints.length > 2) {
+      val points = meta.modelTiePoints.filter(_ > 0.0)
 
       output.print("xllcorner    ")
       output.println(points.head)

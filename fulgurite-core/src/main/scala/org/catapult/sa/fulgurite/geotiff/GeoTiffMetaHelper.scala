@@ -73,17 +73,19 @@ object GeoTiffMetaHelper {
     setInt(rootIFD, BaselineTIFFTagSet.TAG_COMPRESSION, meta.compression)
     setGeoShorts(rootIFD, GeoTIFFTagSet.TAG_GEO_KEY_DIRECTORY, meta.geoKeyDirectory.map(_.toChar))
 
+    setInt(rootIFD, BaselineTIFFTagSet.TAG_ROWS_PER_STRIP, meta.rowsPerStrip)
+
     // given we have just updated the size we should also update the number of offset and byte count places to be filled in later
     rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_OFFSETS)
     rootIFD.removeTIFFField(BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS)
     meta.planarConfiguration match {
       case BaselineTIFFTagSet.PLANAR_CONFIGURATION_CHUNKY => {
-        setEmptyLongs(rootIFD, BaselineTIFFTagSet.TAG_STRIP_OFFSETS, meta.height.asInstanceOf[Int])
-        setEmptyLongs(rootIFD, BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS, meta.height.asInstanceOf[Int] * meta.samplesPerPixel)
+        setEmptyLongs(rootIFD, BaselineTIFFTagSet.TAG_STRIP_OFFSETS, meta.height.asInstanceOf[Int] )
+        setEmptyLongs(rootIFD, BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS, meta.height.asInstanceOf[Int])
       }
       case BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR => {
-        setEmptyLongs(rootIFD, BaselineTIFFTagSet.TAG_STRIP_OFFSETS, meta.height.asInstanceOf[Int])
-        setEmptyLongs(rootIFD, BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS, meta.height.asInstanceOf[Int])
+        setEmptyLongs(rootIFD, BaselineTIFFTagSet.TAG_STRIP_OFFSETS, meta.height.asInstanceOf[Int] * meta.samplesPerPixel)
+        setEmptyLongs(rootIFD, BaselineTIFFTagSet.TAG_STRIP_BYTE_COUNTS, meta.height.asInstanceOf[Int]* meta.samplesPerPixel)
       }
       case _ => throw new IllegalArgumentException("Unknown planar configuration")
     }

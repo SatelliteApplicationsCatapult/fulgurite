@@ -110,6 +110,8 @@ $RECYCLE.BIN/
 # IntelliJ
 out/
 
+
+
 # mpeltonen/sbt-idea plugin
 .idea_modules/
 
@@ -191,3 +193,6 @@ project/plugins/project/
 # Scala-IDE specific
 .scala_dependencies
 .worksheet
+
+# qgis metadata file
+*.aux.xml

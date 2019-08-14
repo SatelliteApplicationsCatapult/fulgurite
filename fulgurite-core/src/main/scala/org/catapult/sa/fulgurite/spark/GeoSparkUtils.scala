@@ -146,7 +146,7 @@ object GeoSparkUtils {
       ios.flush()
       val startPoint = rootIFD.getLastPosition
       ios.seek(rootIFD.getStripOrTileOffsetsPosition)
-      
+
       // Now go back and update the IFD with the position offsets of the strips
       if (meta.planarConfiguration == BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR) {
 
@@ -168,8 +168,16 @@ object GeoSparkUtils {
 
       // Finally update the row byte lengths
       ios.seek(rootIFD.getStripOrTileByteCountsPosition)
-      0.until(meta.samplesPerPixel).foreach { s =>
-        val rowWidth = meta.width * meta.bytesPerSample(s)
+
+      if (meta.planarConfiguration == BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR) {
+        0.until(meta.samplesPerPixel).foreach { s =>
+          val rowWidth = meta.width * meta.bytesPerSample(s)
+          0L.until(meta.height).foreach { _ =>
+            ios.writeInt(rowWidth.asInstanceOf[Int])
+          }
+        }
+      } else {
+        val rowWidth = meta.width * meta.bytesPerSample.sum
         0L.until(meta.height).foreach { _ =>
           ios.writeInt(rowWidth.asInstanceOf[Int])
         }

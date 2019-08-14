@@ -19,15 +19,16 @@ class TestWriting {
   @Test
   def testBasicWrite() : Unit = {
 
-    val outputName = FileUtils.getTempDirectoryPath + "/tmp" + Random.nextInt()
-    new File(outputName).deleteOnExit()
+    val outputName = FileUtils.getTempDirectoryPath + "tmp" + Random.nextInt()
+    //new File(outputName).deleteOnExit()
 
     val sc = getSparkContext("TestWriting", "local[2]")
 
     val metaData = GeoTiffMeta(11L, 11L, 3, Array(8, 8, 8), 0, 0, Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-      Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Int], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
+      Array(1.2, 1.2, 0.0), 2, BaselineTIFFTagSet.PLANAR_CONFIGURATION_CHUNKY, Array.empty[Char], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
       Array(1L, 1L), Array(1L, 1L), BaselineTIFFTagSet.COMPRESSION_NONE,
-      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
+      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001), 1, Array(1, 1, 1),
+      Array.empty[Long], Array.empty[Long]
     )
 
     val input = sc.parallelize((0 until 11).flatMap(y => (0 until 11).flatMap(x => List(Index(x, y, 0) -> 255, Index(x, y, 1) -> 128, Index(x, y, 2) -> 0))))
@@ -40,7 +41,7 @@ class TestWriting {
 
     IOUtils.read(new FileInputStream(outputName + "/data.tif"), result)
     IOUtils.read(new FileInputStream("src/test/resources/data_chunked.tif"), expected)
-
+    print(outputName)
     assertArrayEquals(expected, result)
 
   }
@@ -48,18 +49,19 @@ class TestWriting {
 
   @Test
   def testWritePlanar() : Unit = {
-    val outputName = FileUtils.getTempDirectoryPath + "/tmp" + Random.nextInt()
-    new File(outputName).deleteOnExit()
+    val outputName = FileUtils.getTempDirectoryPath + "tmp" + Random.nextInt()
+    //new File(outputName).deleteOnExit()
 
     val sc = getSparkContext("TestWriting", "local[2]")
 
     val metaData = GeoTiffMeta(11L, 11L, 3, Array(8, 8, 8), 0, 0, Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-      Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Int], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
-      Array(1L, 1L), Array(1L, 1L), BaselineTIFFTagSet.COMPRESSION_NONE,
-      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
+     Array(1.2, 1.2, 0.0), 2, BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR, Array.empty[Char], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|", Array(1L, 1L), Array(1L, 1L),
+     BaselineTIFFTagSet.COMPRESSION_NONE,
+     Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001), 11, Array(1, 1, 1),
+     Array.empty[Long], Array.empty[Long]
     )
 
-    metaData.planarConfiguration = BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR
+
 
     val input = for {
       band <- 0 until 3
@@ -77,28 +79,29 @@ class TestWriting {
 
     IOUtils.read(new FileInputStream(outputName + "/data.tif"), result)
     IOUtils.read(new FileInputStream("src/test/resources/data_planar.tif"), expected)
-
+    print(outputName)
     assertArrayEquals(expected, result)
 
   }
 
   @Test
   def addingTransparentSample() : Unit = {
-    val outputName = FileUtils.getTempDirectoryPath + "/tmp" + Random.nextInt()
-    new File(outputName).deleteOnExit()
+    val outputName = FileUtils.getTempDirectoryPath + File.separator + "tmp" + Random.nextInt()
+    //new File(outputName).deleteOnExit()
 
     val sc = getSparkContext("TestWriting", "local[2]")
 
     val metaData = GeoTiffMeta(11L, 11L, 3, Array(8, 8, 8), 0, 0, Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-      Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Int], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
+      Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Char], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
       Array(1L, 1L), Array(1L, 1L), BaselineTIFFTagSet.COMPRESSION_NONE,
-      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
+      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001), 1, Array(1d, 1d, 1d),
+      Array.empty[Long], Array.empty[Long]
     )
 
     metaData.planarConfiguration = BaselineTIFFTagSet.PLANAR_CONFIGURATION_PLANAR
     metaData.samplesPerPixel = metaData.samplesPerPixel + 1 // One extra sample
     metaData.bitsPerSample = (8 :: metaData.bitsPerSample.toList).toArray // that is 8 bits
-    metaData.extraSamples = Array(BaselineTIFFTagSet.EXTRA_SAMPLES_UNASSOCIATED_ALPHA)
+    metaData.extraSamples = (BaselineTIFFTagSet.EXTRA_SAMPLES_UNASSOCIATED_ALPHA.toChar :: metaData.extraSamples.toList).toArray
     metaData.sampleFormat = (BaselineTIFFTagSet.SAMPLE_FORMAT_UNSIGNED_INTEGER :: metaData.sampleFormat.toList).toArray
 
     val input = for {
@@ -117,7 +120,7 @@ class TestWriting {
 
     IOUtils.read(new FileInputStream(outputName + "/data.tif"), result)
     IOUtils.read(new FileInputStream("src/test/resources/data_planar_transparent.tif"), expected)
-
+    print(outputName)
     assertArrayEquals(expected, result)
   }
 
@@ -127,9 +130,10 @@ class TestWriting {
     val sc = getSparkContext("TestWriting", "local[2]")
 
     val metaData = GeoTiffMeta(11L, 11L, 3, Array(8, 8, 8), 0, 0, Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-      Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Int], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
+      Array(1.2, 1.2, 0.0), 2, 1, Array.empty[Char], Array(1, 1, 1), "WGS 84 / UTM zone 30N|WGS 84|",
       Array(1L, 1L), Array(1L, 1L), BaselineTIFFTagSet.COMPRESSION_JPEG,
-      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001)
+      Array(1, 1, 0, 7, 1024, 0, 1, 1, 1025, 0, 1, 1, 1026, 34737, 7, 22, 2054, 0, 1, 9102, 3072, 0, 1, 32630, 3076, 0, 1, 9001), 1,
+      Array(1, 1, 1), Array.empty[Long], Array.empty[Long]
     )
 
     val inputRDD = sc.emptyRDD[(Index, Int)]
