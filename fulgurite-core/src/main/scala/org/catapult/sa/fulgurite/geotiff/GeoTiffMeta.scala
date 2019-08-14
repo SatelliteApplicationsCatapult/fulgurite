@@ -12,16 +12,20 @@ import com.github.jaiimageio.plugins.tiff.BaselineTIFFTagSet
 case class GeoTiffMeta(var width : Long, var height : Long,
                        var samplesPerPixel : Int, var bitsPerSample: Array[Int],
                        var startOffset : Long, var endOffset : Long,
-                       var tiePoints : Array[Double],
+                       var modelTiePoints : Array[Double],
                        var pixelScales : Array[Double],
                        var photometricInterpretation : Int,
                        var planarConfiguration : Int,
-                       var extraSamples : Array[Int],
+                       var extraSamples : Array[Char],
                        var sampleFormat : Array[Int],
                        var geoAsciiParams : String,
                        var xResolution : Array[Long], var yResolution : Array[Long],
                        var compression: Int,
-                       var geoKeyDirectory : Array[Int]) {
+                       var geoKeyDirectory : Array[Int],
+                       var rowsPerStrip: Int,
+                       var geoDoubleParams: Array[Double],
+                       var stripByteCounts: Array[Long],
+                       var stripOffsets: Array[Long]) {
 
   def bytesPerSample = bitsPerSample.map(b => (b + 7) / 8)
 
@@ -45,7 +49,11 @@ object GeoTiffMeta {
       geoMeta.geoAsciiParams,
       geoMeta.xResolution, geoMeta.yResolution,
       geoMeta.compression,
-      geoMeta.geoKeyDirectory
+      geoMeta.geoKeyDirectory,
+      geoMeta.rowsPerStrip,
+      geoMeta.geoDoubleParams,
+      geoMeta.stripByteCounts,
+      geoMeta.stripOffsets
     )
 
   }
@@ -54,13 +62,17 @@ object GeoTiffMeta {
     old.width, old.height,
     old.samplesPerPixel, old.bitsPerSample,
     old.startOffset, old.endOffset,
-    old.tiePoints, old.pixelScales,
+    old.modelTiePoints, old.pixelScales,
     old.photometricInterpretation, old.planarConfiguration,
     old.extraSamples, old.sampleFormat,
     old.geoAsciiParams,
     old.xResolution, old.yResolution,
     old.compression,
-    old.geoKeyDirectory
+    old.geoKeyDirectory,
+    old.rowsPerStrip,
+    old.geoDoubleParams,
+    old.stripByteCounts,
+    old.stripOffsets
   )
 
   def apply(file : File) : GeoTiffMeta = {
